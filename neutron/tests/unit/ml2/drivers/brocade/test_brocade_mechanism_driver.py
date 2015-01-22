@@ -14,13 +14,12 @@
 # limitations under the License.
 
 import mock
-from oslo.utils import importutils
-
 from neutron.openstack.common import log as logging
 from neutron.plugins.ml2 import config as ml2_config
 from neutron.plugins.ml2.drivers.brocade import (mechanism_brocade
                                                  as brocademechanism)
 from neutron.tests.unit.ml2 import test_ml2_plugin
+from oslo.utils import importutils
 
 LOG = logging.getLogger(__name__)
 MECHANISM_NAME = ('neutron.plugins.ml2.'
@@ -29,6 +28,7 @@ MECHANISM_NAME = ('neutron.plugins.ml2.'
 
 class TestBrocadeMechDriverV2(test_ml2_plugin.Ml2PluginV2TestCase):
     """Test Brocade VCS/VDX mechanism driver.
+
     """
 
     _mechanism_name = MECHANISM_NAME
