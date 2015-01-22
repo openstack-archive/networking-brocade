@@ -15,10 +15,9 @@
 
 
 """Brocade specific database schema/model."""
-import sqlalchemy as sa
-
 from neutron.db import model_base
 from neutron.db import models_v2
+import sqlalchemy as sa
 
 
 class ML2_BrocadeNetwork(model_base.BASEV2, models_v2.HasId,
