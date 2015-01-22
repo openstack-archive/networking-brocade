@@ -17,16 +17,17 @@
 
 """Implentation of Brocade SVI service Plugin."""
 
-from oslo.config import cfg
-from oslo.utils import excutils
-
 from neutron.common import constants as l3_constants
-from neutron.i18n import _LE, _LI
+from neutron.i18n import _LE
+from neutron.i18n import _LI
 from neutron.openstack.common import log as logging
 from neutron.plugins.ml2 import db
 from neutron.plugins.ml2.drivers.brocade.db import models as brocade_db
 from neutron.plugins.ml2.drivers.brocade.nos import nosdriver as driver
 from neutron.services.l3_router import l3_router_plugin as router
+
+from oslo.config import cfg
+from oslo.utils import excutils
 
 
 DEVICE_OWNER_ROUTER_INTF = l3_constants.DEVICE_OWNER_ROUTER_INTF

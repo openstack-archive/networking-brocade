@@ -16,13 +16,14 @@
 
 """Implentation of Brocade ML2 Mechanism driver for ML2 Plugin."""
 
-from oslo.config import cfg
-from oslo.utils import importutils
-
-from neutron.i18n import _LE, _LI
+from neutron.i18n import _LE
+from neutron.i18n import _LI
 from neutron.openstack.common import log as logging
 from neutron.plugins.ml2 import driver_api
 from neutron.plugins.ml2.drivers.brocade.db import models as brocade_db
+
+from oslo.config import cfg
+from oslo.utils import importutils
 
 LOG = logging.getLogger(__name__)
 MECHANISM_VERSION = 0.9
@@ -46,9 +47,10 @@ cfg.CONF.register_opts(ML2_BROCADE, "ml2_brocade")
 
 
 class BrocadeMechanism(driver_api.MechanismDriver):
-    """ML2 Mechanism driver for Brocade VDX switches. This is the upper
-    layer driver class that interfaces to lower layer (NETCONF) below.
+    """ML2 Mechanism driver for Brocade VDX switches.
 
+    This is the upper
+    layer driver class that interfaces to lower layer (NETCONF) below.
     """
 
     def __init__(self):
@@ -85,9 +87,9 @@ class BrocadeMechanism(driver_api.MechanismDriver):
                 self._switch['password'])
 
         virtual_fabric_enabled = self._driver.is_virtual_fabric_enabled(
-                self._switch['address'],
-                self._switch['username'],
-                self._switch['password'])
+            self._switch['address'],
+            self._switch['username'],
+            self._switch['password'])
 
         if virtual_fabric_enabled:
             LOG.debug("Virtual Fabric: enabled")
@@ -189,10 +191,10 @@ class BrocadeMechanism(driver_api.MechanismDriver):
                      " of network type = %(network_type)s"
                      " with vlan = %(vlan_id)s"
                      " for tenant %(tenant_id)s"),
-                {'network_id': network_id,
-                 'network_type': network_type,
-                 'vlan_id': vlan_id,
-                 'tenant_id': tenant_id})
+                 {'network_id': network_id,
+                  'network_type': network_type,
+                  'vlan_id': vlan_id,
+                  'tenant_id': tenant_id})
 
     def delete_network_precommit(self, mech_context):
         """Delete Network from the plugin specific database table."""
@@ -217,13 +219,16 @@ class BrocadeMechanism(driver_api.MechanismDriver):
         LOG.info(_LI("delete network (precommit): %(network_id)s"
                      " with vlan = %(vlan_id)s"
                      " for tenant %(tenant_id)s"),
-                {'network_id': network_id,
-                 'vlan_id': vlan_id,
-                 'tenant_id': tenant_id})
+                 {'network_id': network_id,
+                  'vlan_id': vlan_id,
+                  'tenant_id': tenant_id})
 
     def delete_network_postcommit(self, mech_context):
-        """Delete network which translates to removng portprofile
+        """Delete network.
+
+        Delete network which translates to removng portprofile
         from the switch.
+
         """
 
         LOG.debug("delete_network_postcommit: called")
@@ -246,9 +251,9 @@ class BrocadeMechanism(driver_api.MechanismDriver):
         LOG.info(_LI("delete network (postcommit): %(network_id)s"
                      " with vlan = %(vlan_id)s"
                      " for tenant %(tenant_id)s"),
-                {'network_id': network_id,
-                 'vlan_id': vlan_id,
-                 'tenant_id': tenant_id})
+                 {'network_id': network_id,
+                  'vlan_id': vlan_id,
+                  'tenant_id': tenant_id})
 
     def update_network_precommit(self, mech_context):
         """Noop now, it is left here for future."""

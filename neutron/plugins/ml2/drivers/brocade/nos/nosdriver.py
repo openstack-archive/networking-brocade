@@ -20,6 +20,7 @@ Neutron network life-cycle management.
 
 from ncclient import manager
 from oslo.utils import excutils
+
 from xml.etree import ElementTree
 
 from neutron.i18n import _LE

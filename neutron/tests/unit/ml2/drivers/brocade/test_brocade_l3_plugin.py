@@ -16,13 +16,14 @@
 #
 
 import mock
-from oslo.config import cfg
-from oslo.utils import importutils
-from oslo_context import context as oslo_context
 
 from neutron.db import api as db
 from neutron.openstack.common import log as logging
 from neutron.tests.unit import test_l3_plugin
+
+from oslo.config import cfg
+from oslo.utils import importutils
+from oslo_context import context as oslo_context
 
 LOG = logging.getLogger(__name__)
 L3_SVC_PLUGIN = ('neutron.services.l3_router.'
