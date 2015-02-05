@@ -27,3 +27,4 @@ setuptools*.egg/
 !/.mailmap
 !/.pylintrc
 !/.testr.conf
+networking_brocade.egg-info/
