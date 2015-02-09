@@ -16,14 +16,22 @@
 import mock
 from neutron.openstack.common import log as logging
 from neutron.plugins.ml2 import config as ml2_config
-from neutron.plugins.ml2.drivers.brocade import (mechanism_brocade
-                                                 as brocademechanism)
+
+#from neutron.plugins.ml2.drivers.brocade import (mechanism_brocade
+#                                                 as brocademechanism)
+
+from vendor.brocade.networking_brocade.vdx.ml2driver import (mechanism_brocade
+                                                              as brocademechanism)
 from neutron.tests.unit.ml2 import test_ml2_plugin
 from oslo.utils import importutils
 
 LOG = logging.getLogger(__name__)
-MECHANISM_NAME = ('neutron.plugins.ml2.'
-                  'drivers.brocade.mechanism_brocade.BrocadeMechanism')
+
+#MECHANISM_NAME = ('neutron.plugins.ml2.'
+#                  'drivers.brocade.mechanism_brocade.BrocadeMechanism')
+
+MECHANISM_NAME = ('vendor.brocade.networking_brocade.'
+                  'vdx.ml2driver.mechanism_brocade.BrocadeMechanism')
 
 
 class TestBrocadeMechDriverV2(test_ml2_plugin.Ml2PluginV2TestCase):
