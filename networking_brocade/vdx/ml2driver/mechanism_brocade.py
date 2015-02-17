@@ -26,7 +26,7 @@ from oslo.utils import importutils
 
 LOG = logging.getLogger(__name__)
 MECHANISM_VERSION = 0.9
-NOS_DRIVER = 'neutron.plugins.ml2.drivers.brocade.nos.nosdriver.NOSdriver'
+NOS_DRIVER = 'networking_brocade.vdx.ml2driver.nos.nosdriver.NOSdriver'
 
 ML2_BROCADE = [cfg.StrOpt('address', default='',
                           help=_('The address of the host to SSH to')),

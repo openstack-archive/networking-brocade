@@ -23,10 +23,9 @@ from oslo.utils import excutils
 
 from xml.etree import ElementTree
 
+from networking_brocade.vdx.ml2driver.nos import nctemplates as template
 from neutron.i18n import _LE
 from neutron.openstack.common import log as logging
-from neutron.plugins.ml2.drivers.brocade.nos import nctemplates as template
-
 
 LOG = logging.getLogger(__name__)
 SSH_PORT = 22
