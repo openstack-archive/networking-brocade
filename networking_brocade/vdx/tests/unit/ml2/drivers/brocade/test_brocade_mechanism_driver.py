@@ -14,16 +14,16 @@
 # limitations under the License.
 
 import mock
+from networking_brocade.vdx.ml2driver import (
+    mechanism_brocade as brocademechanism)
 from neutron.openstack.common import log as logging
 from neutron.plugins.ml2 import config as ml2_config
 from neutron.tests.unit.ml2 import test_ml2_plugin
 from oslo.utils import importutils
-from vendor.brocade.networking_brocade.vdx.ml2driver import (
-    mechanism_brocade as brocademechanism)
 
 LOG = logging.getLogger(__name__)
 
-MECHANISM_NAME = ('vendor.brocade.networking_brocade.'
+MECHANISM_NAME = ('networking_brocade.'
                   'vdx.ml2driver.mechanism_brocade.BrocadeMechanism')
 
 
