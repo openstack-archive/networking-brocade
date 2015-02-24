@@ -17,11 +17,12 @@
 
 import mock
 from neutron.db import api as db
+from neutron.i18n import _LI
 from neutron.openstack.common import log as logging
 from neutron.tests.unit import test_l3_plugin
-from oslo.config import cfg
-from oslo.utils import importutils
+from oslo_config import cfg
 from oslo_context import context as oslo_context
+from oslo_utils import importutils
 
 LOG = logging.getLogger(__name__)
 L3_SVC_PLUGIN = ('neutron.services.l3_router.'
@@ -40,7 +41,7 @@ class BrocadeSVIPlugin_TestCases(test_l3_plugin.TestL3NatBasePlugin):
                             'password': cfg.CONF.ml2_brocade.password,
                             'rbridge_id': cfg.CONF.ml2_brocade.rbridge_id
                             }
-            LOG.info(_("rbridge id %s"), self._switch['rbridge_id'])
+            LOG.info(_LI("rbridge id %s"), self._switch['rbridge_id'])
             self._driver = mock.MagicMock()
 
         self.l3_plugin = importutils.import_object(L3_SVC_PLUGIN)
