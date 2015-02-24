@@ -26,8 +26,8 @@ from neutron.plugins.ml2 import db
 from neutron.plugins.ml2.drivers.brocade.db import models as brocade_db
 from neutron.plugins.ml2.drivers.brocade.nos import nosdriver as driver
 from neutron.services.l3_router import l3_router_plugin as router
-from oslo.config import cfg
-from oslo.utils import excutils
+from oslo_config import cfg
+from oslo_utils import excutils
 
 
 DEVICE_OWNER_ROUTER_INTF = l3_constants.DEVICE_OWNER_ROUTER_INTF
