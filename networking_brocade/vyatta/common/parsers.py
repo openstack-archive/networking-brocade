@@ -19,7 +19,7 @@ import functools
 import itertools
 import re
 
-from vyatta.common import exceptions as v_exc
+from networking_brocade.vyatta.common import exceptions as v_exc
 
 HWADDR = r'(?:[a-zA-Z0-9]{2}:){5}[a-zA-Z0-9]{2}'
 IPv4_ADDR = r'(?:\d+\.){3}\d+'

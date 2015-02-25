@@ -20,11 +20,11 @@ import urllib
 from neutron import context
 from neutron.db import models_v2
 from neutron.openstack.common import uuidutils
-from neutron.tests import base
 
-from vyatta.common import utils as vyatta_utils
-from vyatta.vrouter import client as vyatta_client
-from vyatta.vrouter import driver as vrouter_driver
+from networking_brocade.vyatta.common import utils as vyatta_utils
+from networking_brocade.vyatta.tests import base
+from networking_brocade.vyatta.vrouter import client as vyatta_client
+from networking_brocade.vyatta.vrouter import driver as vrouter_driver
 
 
 _uuid = uuidutils.generate_uuid

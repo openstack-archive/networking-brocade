@@ -26,9 +26,9 @@ from neutron.openstack.common import log as logging
 from novaclient import exceptions as nova_exc
 from novaclient.v1_1 import client as novaclient
 
-from vyatta.common import config
-from vyatta.common import exceptions as v_exc
-from vyatta.vrouter import client as vyatta_client
+from networking_brocade.vyatta.common import config
+from networking_brocade.vyatta.common import exceptions as v_exc
+from networking_brocade.vyatta.vrouter import client as vyatta_client
 
 
 LOG = logging.getLogger(__name__)

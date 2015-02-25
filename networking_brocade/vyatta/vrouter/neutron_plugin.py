@@ -37,10 +37,10 @@ from neutron.i18n import _LE
 from neutron.openstack.common import log as logging
 from neutron.plugins.common import constants
 
-from vyatta.common import config
-from vyatta.common import exceptions as v_exc
-from vyatta.common import utils as vyatta_utils
-from vyatta.vrouter import driver as vrouter_driver
+from networking_brocade.vyatta.common import config
+from networking_brocade.vyatta.common import exceptions as v_exc
+from networking_brocade.vyatta.common import utils as vyatta_utils
+from networking_brocade.vyatta.vrouter import driver as vrouter_driver
 
 
 LOG = logging.getLogger(__name__)

@@ -24,11 +24,11 @@ from oslo_serialization import jsonutils
 from oslo_utils import excutils
 import requests
 
-from vyatta.common import config
-from vyatta.common import exceptions as v_exc
-from vyatta.common import globals as vyatta_globals
-from vyatta.common import parsers
-from vyatta.common import utils as vyatta_utils
+from networking_brocade.vyatta.common import config
+from networking_brocade.vyatta.common import exceptions as v_exc
+from networking_brocade.vyatta.common import globals as vyatta_globals
+from networking_brocade.vyatta.common import parsers
+from networking_brocade.vyatta.common import utils as vyatta_utils
 
 
 LOG = logging.getLogger(__name__)
