@@ -21,8 +21,8 @@ from sqlalchemy.orm import exc as orm_exc
 from neutron.db import model_base
 from neutron.db import models_v2
 
-from vyatta.common import config as vyatta_config
-from vyatta.common import exceptions as v_exc
+from networking_brocade.vyatta.common import config as vyatta_config
+from networking_brocade.vyatta.common import exceptions as v_exc
 
 
 @six.add_metaclass(abc.ABCMeta)

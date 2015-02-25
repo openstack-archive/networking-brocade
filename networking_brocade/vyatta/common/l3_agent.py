@@ -20,9 +20,9 @@ from neutron.agent.l3 import router_info
 from neutron.agent import l3_agent as entry
 from neutron.common import constants as l3_constants
 
-from vyatta.common import config as vyatta_config
-from vyatta.common import exceptions as v_exc
-from vyatta.vrouter import client as vyatta_client
+from networking_brocade.vyatta.common import config as vyatta_config
+from networking_brocade.vyatta.common import exceptions as v_exc
+from networking_brocade.vyatta.vrouter import client as vyatta_client
 
 
 _KEY_VYATTA_EXTRA_DATA = '_vyatta'

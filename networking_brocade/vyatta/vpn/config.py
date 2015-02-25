@@ -24,9 +24,9 @@ from oslo_utils import excutils
 import six
 
 from neutron.i18n import _LE, _LI
-from vyatta.common import exceptions as v_exc
-from vyatta.common import parsers as v_parsers
-from vyatta.vrouter import client as vyatta_client
+from networking_brocade.vyatta.common import exceptions as v_exc
+from networking_brocade.vyatta.common import parsers as v_parsers
+from networking_brocade.vyatta.vrouter import client as vyatta_client
 
 
 LOG = logging.getLogger(__name__)

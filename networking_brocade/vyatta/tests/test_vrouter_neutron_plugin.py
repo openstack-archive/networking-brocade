@@ -27,8 +27,8 @@ from neutron.tests.unit import test_l3_plugin
 from neutron.tests.unit import testlib_api
 from neutron.tests.unit import testlib_plugin
 
-from vyatta.common import utils as vyatta_utils
-from vyatta.vrouter import neutron_plugin as vrouter_plugin
+from networking_brocade.vyatta.common import utils as vyatta_utils
+from networking_brocade.vyatta.vrouter import neutron_plugin as vrouter_plugin
 
 _uuid = uuidutils.generate_uuid
 
@@ -60,7 +60,8 @@ class TestVyattaVRouterPlugin(testlib_api.SqlTestCase,
         fake_driver_mock.return_value = self.driver
 
         self._mock(
-            'vyatta.vrouter.driver.VyattaVRouterDriver', fake_driver_mock)
+            'networking_brocade.vyatta.vrouter.driver.VyattaVRouterDriver',
+            fake_driver_mock)
 
         self.context = context.get_admin_context()
         self.plugin = VRouterTestPlugin()
@@ -315,8 +316,10 @@ class TestVyattaVRouterPlugin(testlib_api.SqlTestCase,
             None)
 
 CORE_PLUGIN_CLASS = (
-    "vyatta.tests.test_vrouter_neutron_plugin.TestVRouterNatPlugin")
-L3_PLUGIN_CLASS = "vyatta.vrouter.neutron_plugin.VyattaVRouterMixin"
+    "networking_brocade.vyatta.tests.test_vrouter_neutron_plugin"
+    ".TestVRouterNatPlugin")
+L3_PLUGIN_CLASS = (
+    "networking_brocade.vyatta.vrouter.neutron_plugin.VyattaVRouterMixin")
 
 
 class TestVRouterNatPlugin(test_l3_plugin.TestL3NatBasePlugin):
@@ -338,7 +341,7 @@ class VRouterTestCase(test_db_plugin.NeutronDbPluginV2TestCase,
         self._mock('eventlet.greenthread.sleep')
 
         self._mock(
-            'vyatta.vrouter.driver.'
+            'networking_brocade.vyatta.vrouter.driver.'
             'VyattaVRouterDriver', FakeVRouterDriver)
 
         cfg.CONF.set_default('allow_overlapping_ips', True)
