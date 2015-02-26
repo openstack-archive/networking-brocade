@@ -63,7 +63,7 @@ class L3AgentMiddleware(l3_agent.L3NATAgentWithStateReport):
 
     def _router_added(self, router_id, router):
         ri = router_info.RouterInfo(
-            router_id, router, self.root_helper, self.conf, self.driver)
+            router_id, router, self.conf, self.driver)
         self.router_info[router_id] = ri
         self.process_router_add(ri)
 
@@ -130,4 +130,4 @@ class L3AgentMiddleware(l3_agent.L3NATAgentWithStateReport):
 
 def main():
     entry.main(
-        manager='vyatta.common.l3_agent.L3AgentMiddleware')
+        manager='networking_brocade.vyatta.common.l3_agent.L3AgentMiddleware')
