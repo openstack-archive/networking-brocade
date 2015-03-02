@@ -161,6 +161,8 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
     def delete_router(self, context, router_id):
         LOG.debug("Vyatta vRouter Plugin::Delete router: %s", router_id)
 
+        gw_port = None
+
         with context.session.begin(subtransactions=True):
             router = self._get_router(context, router_id)
 
@@ -175,12 +177,14 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
                                                 filters=device_filter)
 
             if ports:
-                port = ports[0]
+                gw_port = ports[0]
                 router.gw_port = None
                 context.session.add(router)
 
-                self._delete_router_port(context, router_id, port)
+        if gw_port:
+            self._delete_router_port(context, router_id, gw_port)
 
+        with context.session.begin(subtransactions=True):
             context.session.delete(router)
 
         self.driver.delete_router(context, router_id)
