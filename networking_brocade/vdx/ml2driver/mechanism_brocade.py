@@ -16,7 +16,7 @@
 
 """Implentation of Brocade ML2 Mechanism driver for ML2 Plugin."""
 
-from networking_brocade.vdx.ml2drivers.db import models as brocade_db
+from networking_brocade.vdx.ml2driver.db import models as brocade_db
 from neutron.i18n import _LE
 from neutron.i18n import _LI
 from neutron.openstack.common import log as logging
