@@ -66,10 +66,6 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
     ATTACH_PORT_RETRY_LIMIT = 5
     ATTACH_PORT_RETRY_DELAY = 5
 
-    supported_extension_aliases = [
-        "router", "ext-gw-mode", "extraroute",
-        l3_constants.L3_AGENT_SCHEDULER_EXT_ALIAS]
-
     def __init__(self):
         self.setup_rpc()
         self.driver = vrouter_driver.VyattaVRouterDriver()
