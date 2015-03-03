@@ -21,27 +21,6 @@ from neutron.db import models_v2
 import sqlalchemy as sa
 
 
-class ML2_BrocadeNetwork(model_base.BASEV2, models_v2.HasId,
-                         models_v2.HasTenant):
-    """Schema for brocade network."""
-
-    vlan = sa.Column(sa.String(10))
-    segment_id = sa.Column(sa.String(36))
-    network_type = sa.Column(sa.String(10))
-
-
-class ML2_BrocadePort(model_base.BASEV2, models_v2.HasId,
-                      models_v2.HasTenant):
-    """Schema for brocade port."""
-
-    network_id = sa.Column(sa.String(36),
-                           sa.ForeignKey("ml2_brocadenetworks.id"),
-                           nullable=False)
-    admin_state_up = sa.Column(sa.Boolean, nullable=False)
-    physical_interface = sa.Column(sa.String(36))
-    vlan_id = sa.Column(sa.String(36))
-
-
 def create_network(context, net_id, vlan, segment_id, network_type, tenant_id):
     """Create a brocade specific network/port-profiles."""
 
