@@ -26,8 +26,8 @@ def load_tests(loader, tests, pattern):
     base_path = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
     base_path = os.path.split(base_path)[0]
     for test_dir in ['./networking_brocade/tests',
-                     './networking_brocade/vdx/tests/unit/ml2/drivers/brocade',
-                     './networking_brocade/vyatta/tests']:
+                     './networking_brocade/vdx/tests/unit/ml2/drivers/brocade'
+                     ]:
         if not pattern:
             suite.addTests(loader.discover(test_dir, top_level_dir=base_path))
         else:
