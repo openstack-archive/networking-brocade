@@ -1,4 +1,4 @@
-# Copyright 2015 Brocade Communications System, Inc.
+# Copyright 2015 Brocade Communications Systems, Inc.
 # All rights reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -21,15 +21,15 @@
 from neutron.i18n import _LE
 from neutron.i18n import _LI
 from neutron.openstack.common import log as logging
-from neutron.plugins.ml2.drivers.brocade.db import models as brocade_db
+from neutron.plugins.ml2.driver_context import NetworkContext
 from neutron.services.l3_router import l3_router_plugin as router
 from oslo_utils import importutils
 
 LOG = logging.getLogger(__name__)
-NI = "neutron.plugins.ml2.drivers.brocade.fi_ni.ni_driver.NetIronDriver"
-BROCADE_CONFIG = ("neutron.plugins.ml2.drivers.brocade.fi_ni.brcd_config."
+NI = "networking_brocade.mlx.ml2.fi_ni.ni_driver.NetIronDriver"
+BROCADE_CONFIG = ("networking_brocade.mlx.ml2.fi_ni.brcd_config."
                   "ML2BrocadeConfig")
-DRIVER_FACTORY = ("neutron.plugins.ml2.drivers.brocade.fi_ni."
+DRIVER_FACTORY = ("networking_brocade.mlx.ml2.fi_ni."
                   "driver_factory.BrocadeDriverFactory")
 # Property to identify which device type to use
 # Currently supports only NI devices. If FI devices needs to be
@@ -189,8 +189,8 @@ class BrocadeFiNiL3RouterPlugin(router.L3RouterPlugin):
         net_addr, net_len = self.net_addr(cidr)
         gateway_ip = subnet["gateway_ip"]
         network_id = subnet['network_id']
-        bnet = brocade_db.get_network(context, network_id)
-        vlan_id = bnet['vlan']
+        ml2_db = NetworkContext(self, context, {'id': network_id})
+        vlan_id = ml2_db.network_segments[0]['segmentation_id']
         gateway_ip_cidr = gateway_ip + '/' + str(net_len)
 
         return vlan_id, gateway_ip_cidr

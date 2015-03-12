@@ -255,7 +255,8 @@ class FakeDriver(object):
         config_map.update({self.address: vlan_map})
 
     def remove_router_interface(self, vlan_id):
-        vlan_map = delete_config_map.pop(self.address, None)
+        global config_map
+        vlan_map = config_map.pop(self.address, None)
         interface_map = vlan_map.pop(vlan_id, None)
         if vlan_map is None:
             raise Exception("No Address")
