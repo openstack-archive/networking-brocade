@@ -470,6 +470,7 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
             router.gw_port = None
             context.session.add(router)
             context.session.expire(gw_port)
+            self._check_router_gw_port_in_use(context, router_id)
 
         self._delete_router_port(
             context, router_id, gw_port, external_gw=True)
