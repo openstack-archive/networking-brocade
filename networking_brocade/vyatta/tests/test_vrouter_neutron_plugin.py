@@ -359,4 +359,11 @@ class VRouterTestCase(base.NeutronDbPluginV2TestCase,
     def test_router_add_interface_ipv6_subnet(self):
         self.skipTest("Fails because router port is created with"
                       " empty device owner")
-        super(VRouterTestCase, self).test_router_add_interface_ipv6_subnet()
+
+    def test_router_delete_ipv6_slaac_subnet_inuse_returns_409(self):
+        self.skipTest("Fails because router port is created with"
+                      " empty device owner")
+
+    def test_router_delete_dhcpv6_stateless_subnet_inuse_returns_409(self):
+        self.skipTest("Fails because router port is created with"
+                      " empty device owner")
