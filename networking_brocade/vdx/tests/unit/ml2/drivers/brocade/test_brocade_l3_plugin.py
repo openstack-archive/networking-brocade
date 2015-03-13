@@ -18,10 +18,10 @@
 import mock
 from neutron.db import api as db
 from neutron.i18n import _LI
-from neutron.openstack.common import log as logging
 from neutron.tests.unit import test_l3_plugin
 from oslo_config import cfg
 from oslo_context import context as oslo_context
+from oslo_log import log as logging
 from oslo_utils import importutils
 
 LOG = logging.getLogger(__name__)
