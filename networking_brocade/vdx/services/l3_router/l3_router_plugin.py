@@ -22,11 +22,11 @@ from networking_brocade.vdx.ml2driver.nos import nosdriver as driver
 from neutron.common import constants as l3_constants
 from neutron.i18n import _LE
 from neutron.i18n import _LI
-from neutron.openstack.common import log as logging
 from neutron.plugins.ml2 import db
 from neutron.plugins.ml2.drivers.brocade.db import models as brocade_db
 from neutron.services.l3_router import l3_router_plugin as router
 from oslo_config import cfg
+from oslo_log import log as logging
 from oslo_utils import excutils
 
 

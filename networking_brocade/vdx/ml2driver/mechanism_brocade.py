@@ -18,10 +18,10 @@
 
 from neutron.i18n import _LE
 from neutron.i18n import _LI
-from neutron.openstack.common import log as logging
 from neutron.plugins.ml2 import driver_api
 from neutron.plugins.ml2.drivers.brocade.db import models as brocade_db
 from oslo_config import cfg
+from oslo_log import log as logging
 from oslo_utils import importutils
 
 LOG = logging.getLogger(__name__)

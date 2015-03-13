@@ -16,9 +16,9 @@
 import mock
 from networking_brocade.vdx.ml2driver import (
     mechanism_brocade as brocademechanism)
-from neutron.openstack.common import log as logging
 from neutron.plugins.ml2 import config as ml2_config
 from neutron.tests.unit.ml2 import test_ml2_plugin
+from oslo_log import log as logging
 from oslo_utils import importutils
 
 LOG = logging.getLogger(__name__)
