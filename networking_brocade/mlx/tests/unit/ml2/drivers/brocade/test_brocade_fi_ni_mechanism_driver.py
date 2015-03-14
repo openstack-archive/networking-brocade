@@ -17,8 +17,8 @@ import mock
 from networking_brocade.mlx.ml2.fi_ni import (
     mechanism_brocade_fi_ni as brocadefinimechanism)
 from neutron import context
-from neutron.openstack.common import log as logging
 from neutron.tests import base
+from oslo_log import log as logging
 from oslo_utils import importutils
 
 LOG = logging.getLogger(__name__)

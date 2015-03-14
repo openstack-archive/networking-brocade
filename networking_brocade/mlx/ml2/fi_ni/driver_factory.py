@@ -19,7 +19,7 @@ Returns the driver based on the firmware version of the device
 """
 from neutron.i18n import _LE
 from neutron.i18n import _LI
-from neutron.openstack.common import log as logging
+from oslo_log import log as logging
 from oslo_utils import importutils
 
 LOG = logging.getLogger(__name__)

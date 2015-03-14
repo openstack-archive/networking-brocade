@@ -17,7 +17,7 @@
 Common driver for both FI and NI devices
 """
 
-from neutron.openstack.common import log as logging
+from oslo_log import log as logging
 from oslo_utils import importutils
 
 CONNECTION_FACTORY = ("networking_brocade.mlx.ml2.connector_factory."

@@ -17,12 +17,11 @@
 
 """Implementation of Brocade L3RouterPlugin for NI devices."""
 
-
 from neutron.i18n import _LE
 from neutron.i18n import _LI
-from neutron.openstack.common import log as logging
 from neutron.plugins.ml2.drivers.brocade.db import models as brocade_db
 from neutron.services.l3_router import l3_router_plugin as router
+from oslo_log import log as logging
 from oslo_utils import importutils
 
 LOG = logging.getLogger(__name__)
