@@ -37,9 +37,10 @@ ML2_BROCADE = [cfg.StrOpt('address', default='',
                cfg.StrOpt('ports', default='',
                           help=('Ports')),
                cfg.StrOpt('transport', default='SSH',
+                          choices=('SSH', 'TELNET'),
                           help=('Protocol used to communicate with Switch')),
-               cfg.StrOpt('ostype', default=None,
-                          help=('OS type of the device. NI or FI')),
+               cfg.StrOpt('ostype', default='NI', choices=('NI','FI'),
+                          help=('OS type of the device.')),
                ]
 
 
