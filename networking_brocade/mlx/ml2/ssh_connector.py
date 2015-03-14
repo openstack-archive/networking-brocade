@@ -19,8 +19,9 @@ import networking_brocade.mlx.ml2.commands as Commands
 from networking_brocade.mlx.ml2.device_connector import (
     DeviceConnector as DevConn)
 from neutron.i18n import _LE
-from neutron.openstack.common import log as logging
+from oslo_log import log as logging
 import paramiko
+
 LOG = logging.getLogger(__name__)
 WRITE = "wb"
 READ = "rb"

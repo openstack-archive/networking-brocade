@@ -18,9 +18,9 @@
 
 from neutron.i18n import _LE
 from neutron.i18n import _LI
-from neutron.openstack.common import log as logging
 from neutron.plugins.ml2.common import exceptions as ml2_exc
 from neutron.plugins.ml2 import driver_api
+from oslo_log import log as logging
 from oslo_utils import importutils
 
 MECHANISM_VERSION = 0.1
