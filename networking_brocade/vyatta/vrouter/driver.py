@@ -17,12 +17,12 @@ import os
 import time
 
 from eventlet import greenthread
+from oslo_log import log as logging
 from oslo_utils import excutils
 from sqlalchemy.orm import exc as orm_exception
 
 from neutron.db import models_v2
 from neutron.i18n import _LE, _LI
-from neutron.openstack.common import log as logging
 from novaclient import exceptions as nova_exc
 from novaclient.v1_1 import client as novaclient
 
