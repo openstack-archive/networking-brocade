@@ -66,18 +66,15 @@ class ML2BrocadeConfig(object):
         :param:isL2: Boolean value based on the router type L2 or L3
         """
         if isL2:
-            cfg.CONF.register_opts(SWITCHES, 'ml2_brocade_fi_ni')
             self._brocade_switches = (cfg.CONF.ml2_brocade_fi_ni.
                                       switch_names)
         else:
-            cfg.CONF.register_opts(SWITCHES, 'l3_brocade_fi_ni')
             self._brocade_switches = (cfg.CONF.l3_brocade_fi_ni.
                                       switch_names)
         switches = self._brocade_switches.split(',')
         for switch in switches:
             switch_info = {}
             switch = switch.strip()
-            cfg.CONF.register_opts(ML2_BROCADE, switch)
             for key, value in cfg.CONF._get(switch).items():
                 value = value.strip()
                 switch_info.update({key: value})
