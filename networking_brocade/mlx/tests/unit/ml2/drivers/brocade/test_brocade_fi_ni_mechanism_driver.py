@@ -17,6 +17,7 @@ import mock
 from networking_brocade.mlx.ml2.fi_ni import (
     mechanism_brocade_fi_ni as brocadefinimechanism)
 from neutron import context
+from neutron.plugins.ml2.common import exceptions as ml2_exc
 from neutron.tests import base
 from oslo_log import log as logging
 from oslo_utils import importutils
@@ -82,6 +83,31 @@ class TestBrocadeFiNiMechDriver(base.BaseTestCase):
             super(TestBrocadeFiNiMechDriver, self).setUp()
             self.mechanism_driver = importutils.import_object(_mechanism_name)
 
+    def test_create_network_postcommit_wrong_physnet(self):
+        """
+        Test create network with wrong value for physical network.
+        Physical network to which the devices belong is 'physnet1' but
+        we make a call to create network with physical network 'physnet2'.
+        In this case we raise an exception with error message -
+        "Brocade Mechanism: failed to create network, network cannot be
+        created in the configured physical network."
+        """
+        ctx = self._get_network_context('physnet2', 'vlan')
+        self.assertRaises(ml2_exc.MechanismDriverError,
+                          self.mechanism_driver.create_network_postcommit, ctx)
+
+    def test_create_network_postcommit_wrong_network_type(self):
+        """
+        Test create network with wrong value for network type. The plugin
+        allows to create network only if the request is to create a VLAN
+        network. For any other network type following exception is raised -
+        'Brocade Mechanism failed to create network, only network type vlan
+        is supported"
+        """
+        ctx = self._get_network_context('physnet1', 'vxlan')
+        self.assertRaises(ml2_exc.MechanismDriverError,
+                          self.mechanism_driver.create_network_postcommit, ctx)
+
     @mock.patch.object(brocadefinimechanism.BrocadeFiNiMechanism,
                        '_get_driver')
     def test_create_network_postcommit(self, mock_driver):
@@ -91,8 +117,29 @@ class TestBrocadeFiNiMechDriver(base.BaseTestCase):
         mock_driver.side_effect = self.side_effect
         ctx = self._get_network_context('physnet1', 'vlan')
         self.mechanism_driver.create_network_postcommit(ctx)
-        global config_map
         self.assertDictSupersetOf(config_map, actual_config_map)
+
+    @mock.patch.object(brocadefinimechanism.BrocadeFiNiMechanism,
+                       '_get_driver')
+    def test_create_network_postcommit_driver_exception(self, mock_driver):
+        """
+        Expect an exception while trying to get the driver
+        """
+        mock_driver.side_effect = self.side_effect_error
+        ctx = self._get_network_context('physnet1', 'vlan')
+        self.assertRaises(ml2_exc.MechanismDriverError,
+                          self.mechanism_driver.create_network_postcommit, ctx)
+
+    @mock.patch.object(brocadefinimechanism.BrocadeFiNiMechanism,
+                       '_get_driver')
+    def test_create_network_postcommit_exception(self, mock_driver):
+        """
+        Exception is raised when the input values are incorrect.
+        """
+        mock_driver.side_effect = self.side_effect_error
+        ctx = self._get_network_context('physnet1', 'vlan')
+        self.assertRaises(ml2_exc.MechanismDriverError,
+                          self.mechanism_driver.create_network_postcommit, ctx)
 
     @mock.patch.object(brocadefinimechanism.BrocadeFiNiMechanism,
                        '_get_driver')
@@ -100,8 +147,6 @@ class TestBrocadeFiNiMechDriver(base.BaseTestCase):
         """
         Test delete network
         """
-        global config_map
-        config_map = actual_config_map
         mock_driver.side_effect = self.side_effect
         ctx = self._get_network_context('physnet1', 'vlan')
         self.mechanism_driver.delete_network_postcommit(ctx)
@@ -184,19 +229,14 @@ class FakeDriver(object):
 
     def create_network(self, vlan_id, ports):
         if self.error:
-            raise Exception("Invalid Input - Create network failed")
+            raise ml2_exc.MechanismDriverError(method='create_network')
         vlan_map = {}
         vlan_map.update({vlan_id: ports})
-        global config_map
         config_map.update({self.address: vlan_map})
 
     def delete_network(self, vlan_id):
-        global config_map
         vlan_map = config_map.pop(self.address, None)
         if vlan_map is None:
-            raise Exception("No Address")
+            raise ml2_exc.MechanismDriverError(method='delete_network')
         else:
             vlan_map.pop(vlan_id, None)
-
-    def _get_config_map(self):
-        return self.config_map
