@@ -19,16 +19,16 @@
 
 from neutron.i18n import _LE
 from neutron.i18n import _LI
-from neutron.plugins.ml2.drivers.brocade.db import models as brocade_db
+from neutron.plugins.ml2.driver_context import NetworkContext
 from neutron.services.l3_router import l3_router_plugin as router
 from oslo_log import log as logging
 from oslo_utils import importutils
 
 LOG = logging.getLogger(__name__)
-NI = "neutron.plugins.ml2.drivers.brocade.fi_ni.ni_driver.NetIronDriver"
-BROCADE_CONFIG = ("neutron.plugins.ml2.drivers.brocade.fi_ni.brcd_config."
+NI = "networking_brocade.mlx.ml2.fi_ni.ni_driver.NetIronDriver"
+BROCADE_CONFIG = ("networking_brocade.mlx.ml2.fi_ni.brcd_config."
                   "ML2BrocadeConfig")
-DRIVER_FACTORY = ("neutron.plugins.ml2.drivers.brocade.fi_ni."
+DRIVER_FACTORY = ("networking_brocade.mlx.ml2.fi_ni."
                   "driver_factory.BrocadeDriverFactory")
 # Property to identify which device type to use
 # Currently supports only NI devices. If FI devices needs to be
@@ -49,8 +49,9 @@ class BrocadeFiNiL3RouterPlugin(router.L3RouterPlugin):
 
         Specify switch address and db configuration.
         """
+        self._devices = {}
+        self._physical_networks = {}
         self._driver_map = {}
-        self._router_devices_map = {}
         super(BrocadeFiNiL3RouterPlugin, self).__init__()
         self.brocade_init()
 
@@ -62,15 +63,14 @@ class BrocadeFiNiL3RouterPlugin(router.L3RouterPlugin):
         LOG.debug("BrocadeFiNiL3RouterPlugin::brocade_init()")
 
         self._devices, self._physical_networks = importutils.import_object(
-            BROCADE_CONFIG).create_ml2_brocade_dictionary()
-        self._filter_router_devices(self._devices)
+            BROCADE_CONFIG).create_brocade_dictionary(isL2=False)
 
     def add_router_interface(self, context, router_id, interface_info):
         """Adds router interface to a vlan on NI device and assigns ip
          address to configure l3 router interface.
         """
 
-        self.add_remove_router_interface(context, router_id,
+        return self.add_remove_router_interface(context, router_id,
                                          interface_info,
                                          True)
 
@@ -100,70 +100,68 @@ class BrocadeFiNiL3RouterPlugin(router.L3RouterPlugin):
         else:
             method = "remove_router_interface"
             operation = "Remove"
+        info = getattr(super(BrocadeFiNiL3RouterPlugin, self),
+                       method)(context, router_id, interface_info)
+        interface_info = info
+        subnet = self._core_plugin._get_subnet(context.elevated(),
+                                               interface_info["subnet_id"])
+        vlan_id, gateway_ip_cidr = self._get_network_info(context, subnet)
+        for device in self._devices:
+            device_info = self._devices.get(device)
+            address = device_info.get('address')
+            driver = self._get_driver(device)
+            LOG.info(_LI("BrocadeFiNiL3RouterPlugin:Before %(op)s l3 "
+                         "router to vlan %(vlan_id)s with ip %(gatewayip)s"
+                         "on device "
+                         "%(host)s"), {'op': operation,
+                                       'vlan_id': vlan_id,
+                                       'gatewayip': gateway_ip_cidr,
+                                       'host': address})
+            try:
+                if is_add is True:
+                    getattr(driver, method)(vlan_id, gateway_ip_cidr)
+                else:
+                    getattr(driver, method)(vlan_id)
+            except Exception as e:
+                if is_add:
+                    method = "remove_router_interface"
+                    info = getattr(super(BrocadeFiNiL3RouterPlugin, self),
+                                   method)(context, router_id, interface_info)
+                LOG.exception(_LE("BrocadeFiNiL3RouterPlugin: failed to"
+                                  " %(op)s l3 router interface for "
+                                  "device= %(device)s exception : "
+                                  "%(error)s"), {'op': operation,
+                                                 'device': address,
+                                                 'error': e.args})
+                raise Exception(
+                    _("BrocadeFiNiL3RouterPlugin: %(op)s router "
+                      "interface failed"), {'op': operation})
+            LOG.info(_LI("BrocadeFiNiL3RouterPlugin:%(op)sed router "
+                         "interface in vlan = %(vlan_id)s with ip address"
+                         " %(gatewayip)s on device %(host)s "
+                         "successful"), {'op': operation,
+                                         'vlan_id': vlan_id,
+                                         'gatewayip': gateway_ip_cidr,
+                                         'host': address})
 
-        with context.session.begin(subtransactions=True):
-            info = getattr(super(BrocadeFiNiL3RouterPlugin, self),
-                           method)(context, router_id, interface_info)
-            interface_info = info
-            subnet = self._core_plugin._get_subnet(context,
-                                                   interface_info["subnet_id"])
-            vlan_id, gateway_ip_cidr = self._get_network_info(context, subnet)
-            for device in self._router_devices_map:
-                device_info = self._router_devices_map.get(device)
-                driver = self._driver_map.get(device)
-                address = device_info.get('address')
-                LOG.info(_LI("BrocadeFiNiL3RouterPlugin:Before %(op)s l3 "
-                             "router to vlan %(vlan_id)s with ip %(gatewayip)s"
-                             "on device "
-                             "%(host)s"), {'op': operation,
-                                           'vlan_id': vlan_id,
-                                           'gatewayip': gateway_ip_cidr,
-                                           'host': address})
-                try:
-                    if is_add is True:
-                        getattr(driver, method)(vlan_id, gateway_ip_cidr)
-                    else:
-                        getattr(driver, method)(vlan_id)
-                except Exception as e:
-                    LOG.exception(_LE("BrocadeFiNiL3RouterPlugin: failed to"
-                                      " %(op)s l3 router interface for "
-                                      "device= %(device)s exception : "
-                                      "%(error)s"), {'op': operation,
-                                                     'device': address,
-                                                     'error': e.args})
-                    raise Exception(
-                        _("BrocadeFiNiL3RouterPlugin: %(op)s router "
-                          "interface failed"), {'op': operation})
-                LOG.info(_LI("BrocadeFiNiL3RouterPlugin:%(op)sed router "
-                             "interface in vlan = %(vlan_id)s with ip address"
-                             " %(gatewayip)s on device %(host)s "
-                             "successful"), {'op': operation,
-                                             'vlan_id': vlan_id,
-                                             'gatewayip': gateway_ip_cidr,
-                                             'host': address})
-        return True
+        return info
 
-    def _filter_router_devices(self, devices):
+    def _get_driver(self, device):
         """
-        Filters devices using the firmware types in the ROUTER_DEVICE_TYPE from
-        devices. It stores the filtered devices in another dictionary
-        _router_devices_map. This method also identifies the driver for the
-        filtered devices and stores them in the map _driver_map with device
-        name as key and the driver as value.
+        Gets the driver based on the firmware version of the device.
 
-        :param:devices: Contains device name as key and device information
-            in a map with key-value pairs as value.
+        :param:device: Contains device name
         :raises: Exception
         """
-        driver_factory = importutils.import_object(DRIVER_FACTORY)
-        for device in devices:
-            device_info = devices.get(device)
+        driver = self._driver_map.get(device)
+        if driver is None:
+            driver_factory = importutils.import_object(DRIVER_FACTORY)
+            device_info = self._devices.get(device)
             address = device_info.get('address')
+            os_type = device_info.get('ostype')
             try:
                 driver = driver_factory.get_driver(device_info)
-                os_type = device_info.get('ostype')
                 if driver is not None and os_type in ROUTER_DEVICE_TYPE:
-                    self._router_devices_map.update({device: device_info})
                     self._driver_map.update({device: driver})
             except Exception as e:
                 LOG.exception(_LE("BrocadeFiNiL3RouterPlugin:"
@@ -173,6 +171,7 @@ class BrocadeFiNiL3RouterPlugin(router.L3RouterPlugin):
                 raise Exception(_("BrocadeFiNiL3RouterPlugin:"
                                   "_filter_router_devices failed for "
                                   "device %(host)s"), {'host': address})
+        return driver
 
     def _get_network_info(self, context, subnet):
         """
@@ -188,8 +187,10 @@ class BrocadeFiNiL3RouterPlugin(router.L3RouterPlugin):
         net_addr, net_len = self.net_addr(cidr)
         gateway_ip = subnet["gateway_ip"]
         network_id = subnet['network_id']
-        bnet = brocade_db.get_network(context, network_id)
-        vlan_id = bnet['vlan']
+        # To create SVI's in Brocade HW, the vlan Id is required
+        # for this network.
+        ml2_db = NetworkContext(self, context, {'id': network_id})
+        vlan_id = ml2_db['vlan']
         gateway_ip_cidr = gateway_ip + '/' + str(net_len)
 
         return vlan_id, gateway_ip_cidr

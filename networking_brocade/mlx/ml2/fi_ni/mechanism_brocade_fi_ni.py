@@ -72,6 +72,19 @@ class BrocadeFiNiMechanism(driver_api.MechanismDriver):
         network_type = segments[0]['network_type']
         vlan_id = segments[0]['segmentation_id']
         physical_network = segments[0]['physical_network']
+        if physical_network not in self._physical_networks:
+            LOG.exception(_LE("BrocadeFiNiMechanism: Failed to create network."
+                              " Network cannot be created in the configured "
+                              "physical network %(physnet)s"),
+                          {'physnet': physical_network})
+            raise ml2_exc.MechanismDriverError(method='create_network_postcomm'
+                                               'it')
+        if network_type != 'vlan':
+            LOG.exception(_LE("BrocadeFiNiMechanism: Failed to create network "
+                              "for network type %(nw_type)s. Only network type"
+                              " vlan is supported"), {'nw_type': network_type})
+            raise ml2_exc.MechanismDriverError(method='create_network_postcomm'
+                                               'it')
         try:
             devices = self._physical_networks.get(physical_network)
             for device in devices:
@@ -86,7 +99,8 @@ class BrocadeFiNiMechanism(driver_api.MechanismDriver):
                                       "device %(host)s exception=%(error)s"),
                                   {'host': address,
                                    'error': e.args})
-                    raise ml2_exc.MechanismDriverError()
+                    raise ml2_exc.MechanismDriverError(method='create_network_'
+                                                       'postcommit')
                 # Proceed only if the driver is not None
                 if driver is not None:
                     driver.create_network(
@@ -96,7 +110,8 @@ class BrocadeFiNiMechanism(driver_api.MechanismDriver):
             LOG.exception(
                 _LE("Brocade FI/NI driver: create_network_postcommit failed"
                     "Error = %(error)s"), {'error': e.args})
-            raise ml2_exc.MechanismDriverError()
+            raise ml2_exc.MechanismDriverError(method='create_network_postcomm'
+                                               'it')
         LOG.info(_LI("BrocadeFiNiMechanism:created_network_postcommit: "
                      "%(network_id)s of network type = %(network_type)s with "
                      "vlan = %(vlan_id)s for tenant %(tenant_id)s"),
@@ -124,7 +139,21 @@ class BrocadeFiNiMechanism(driver_api.MechanismDriver):
         tenant_id = network['tenant_id']
         segments = mech_context.network_segments
         segment = segments[0]
+        network_type = segment['network_type']
         physical_network = segment['physical_network']
+        if physical_network not in self._physical_networks:
+            LOG.exception(_LE("BrocadeFiNiMechanism: Failed to delete network."
+                              " Network cannot be deleted in the configured "
+                              "physical network %(physnet)s"),
+                          {'physnet': physical_network})
+            raise ml2_exc.MechanismDriverError(method='delete_network_postcomm'
+                                               'it')
+        if network_type != 'vlan':
+            LOG.exception(_LE("BrocadeFiNiMechanism: Failed to delete network "
+                              "for network type %(nw_type)s. Only network type"
+                              " vlan is supported"), {'nw_type': network_type})
+            raise ml2_exc.MechanismDriverError(method='delete_network_postcomm'
+                                               'it')
         try:
             devices = self._physical_networks.get(physical_network)
             for device in devices:
@@ -133,7 +162,8 @@ class BrocadeFiNiMechanism(driver_api.MechanismDriver):
         except Exception:
             LOG.exception(
                 _LE("BrocadeFiNiMechanism: failed to delete network"))
-            raise ml2_exc.MechanismDriverError()
+            raise ml2_exc.MechanismDriverError(method='delete_network_postcomm'
+                                               'it')
 
         LOG.info(_LI("BrocadeFiNiMechanism: delete network (postcommit): "
                      "%(network_id)s with vlan = %(vlan_id)s for tenant "
