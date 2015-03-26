@@ -13,39 +13,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os
-
-import neutron
 from neutron.tests import base as n_base
 from neutron.tests.unit import test_db_plugin
 from neutron.tests.unit import testlib_api
-from oslo_config import cfg
-
-
-def override_nvalues():
-    neutron_path = os.path.abspath(
-        os.path.join(os.path.dirname(neutron.__file__), os.pardir))
-    neutron_policy = os.path.join(neutron_path, 'etc/policy.json')
-    cfg.CONF.set_override('policy_file', neutron_policy)
 
 
 class BaseTestCase(n_base.BaseTestCase):
-
-    def setUp(self):
-        override_nvalues()
-        super(BaseTestCase, self).setUp()
+    pass
 
 
 class NeutronDbPluginV2TestCase(test_db_plugin.NeutronDbPluginV2TestCase):
-
-    def setUp(self, plugin=None, service_plugins=None, ext_mgr=None):
-        override_nvalues()
-        super(NeutronDbPluginV2TestCase, self).setUp(
-            plugin, service_plugins, ext_mgr)
+    pass
 
 
 class SqlTestCase(testlib_api.SqlTestCase):
 
     def setUp(self):
-        override_nvalues()
         super(SqlTestCase, self).setUp()
