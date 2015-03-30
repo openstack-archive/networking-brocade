@@ -110,13 +110,8 @@ class L3AgentMiddleware(l3_agent.L3NATAgentWithStateReport):
     def process_router(self, ri):
         pass
 
-    def _get_router_info_list_for_tenant(self, routers, tenant_id):
+    def _get_router_info_list_for_tenant(self, router_ids, tenant_id):
         """Returns the list of router info objects on which to apply the fw."""
-        router_ids = [
-            router['id']
-            for router in routers
-            if router['tenant_id'] == tenant_id]
-
         router_info_list = []
         # Pick up namespaces for Tenant Routers
         for rid in router_ids:
