@@ -18,7 +18,7 @@
 import mock
 from neutron.db import api as db
 from neutron.i18n import _LI
-from neutron.tests.unit import test_l3_plugin
+from neutron.tests.unit.extensions import test_l3
 from oslo_config import cfg
 from oslo_context import context as oslo_context
 from oslo_log import log as logging
@@ -29,7 +29,7 @@ L3_SVC_PLUGIN = ('neutron.services.l3_router.'
                  'brocade.l3_router_plugin.BrocadeSVIPlugin')
 
 
-class BrocadeSVIPlugin_TestCases(test_l3_plugin.TestL3NatBasePlugin):
+class BrocadeSVIPlugin_TestCases(test_l3.TestL3NatBasePlugin):
 
     def setUp(self):
 
@@ -52,6 +52,6 @@ class BrocadeSVIPlugin_TestCases(test_l3_plugin.TestL3NatBasePlugin):
         self.context.session = db.get_session()
 
 
-class TestBrocadeSVINatBase(test_l3_plugin.L3NatExtensionTestCase,
+class TestBrocadeSVINatBase(test_l3.L3NatExtensionTestCase,
                             BrocadeSVIPlugin_TestCases):
     pass
