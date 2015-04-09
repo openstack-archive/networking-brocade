@@ -20,29 +20,6 @@ Parses the brocade ethernet configuration template
 
 from oslo_config import cfg
 
-SWITCHES = [
-    cfg.StrOpt(
-        'switch_names',
-        default='',
-        help=('Switches connected to the compute nodes'))]
-
-ML2_BROCADE = [cfg.StrOpt('address', default='',
-                          help=('The address of the host to SSH to')),
-               cfg.StrOpt('username', default='admin',
-                          help=('The SSH username to use')),
-               cfg.StrOpt('password', default='password', secret=True,
-                          help=('The SSH password to use')),
-               cfg.StrOpt('physical_networks', default='',
-                          help=('Allowed physical networks')),
-               cfg.StrOpt('ports', default='',
-                          help=('Ports')),
-               cfg.StrOpt('transport', default='SSH',
-                          choices=('SSH', 'TELNET'),
-                          help=('Protocol used to communicate with Switch')),
-               cfg.StrOpt('ostype', default='NI', choices=('NI', 'FI'),
-                          help=('OS type of the device.')),
-               ]
-
 
 class ML2BrocadeConfig(object):
 
@@ -66,18 +43,15 @@ class ML2BrocadeConfig(object):
         :param:isL2: Boolean value based on the router type L2 or L3
         """
         if isL2:
-            cfg.CONF.register_opts(SWITCHES, 'ml2_brocade_fi_ni')
             self._brocade_switches = (cfg.CONF.ml2_brocade_fi_ni.
                                       switch_names)
         else:
-            cfg.CONF.register_opts(SWITCHES, 'l3_brocade_fi_ni')
-            self._brocade_switches = (cfg.CONF.l3_brocade_fi_ni.
+            self._brocade_switches = (cfg.CONF.l3_brocade_mlx.
                                       switch_names)
         switches = self._brocade_switches.split(',')
         for switch in switches:
             switch_info = {}
             switch = switch.strip()
-            cfg.CONF.register_opts(ML2_BROCADE, switch)
             for key, value in cfg.CONF._get(switch).items():
                 value = value.strip()
                 switch_info.update({key: value})
@@ -90,6 +64,8 @@ class ML2BrocadeConfig(object):
                         switch_names.append(switch)
 
                     self._physnet_dict.update({value: switch_names})
-
+            if not isL2:
+                switch_info.update({'transport': 'SSH'})
+                switch_info.update({'ostype': 'NI'})
             self._brocade_dict.update({switch: switch_info})
         return self._brocade_dict, self._physnet_dict
