@@ -23,7 +23,6 @@ from neutron.db import models_v2
 from neutron.extensions import l3
 from neutron.openstack.common import uuidutils
 from neutron.tests.unit import test_l3_plugin
-from neutron.tests.unit import testlib_plugin
 
 from networking_brocade.vyatta.common import utils as vyatta_utils
 from networking_brocade.vyatta.tests import base
@@ -45,8 +44,7 @@ class VRouterTestPlugin(vrouter_plugin.VyattaVRouterMixin,
         super(VRouterTestPlugin, self).delete_port(context, port_id)
 
 
-class TestVyattaVRouterPlugin(base.SqlTestCase,
-                              testlib_plugin.PluginSetupHelper):
+class TestVyattaVRouterPlugin(base.SqlTestCase):
     def setUp(self):
         super(TestVyattaVRouterPlugin, self).setUp()
 
@@ -326,8 +324,7 @@ class TestVRouterNatPlugin(test_l3_plugin.TestL3NatBasePlugin):
 
 
 class VRouterTestCase(base.NeutronDbPluginV2TestCase,
-                      test_l3_plugin.L3NatTestCaseBase,
-                      testlib_plugin.NotificationSetupHelper):
+                      test_l3_plugin.L3NatTestCaseBase):
     def setUp(self, core_plugin=None, l3_plugin=None, ext_mgr=None):
 
         if not core_plugin:
