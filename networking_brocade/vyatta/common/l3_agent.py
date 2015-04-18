@@ -77,36 +77,6 @@ class L3AgentMiddleware(l3_agent.L3NATAgentWithStateReport):
 
         del self.router_info[router_id]
 
-    def _create_router_namespace(self, ri):
-        """terminate super call to avoid calls to iptables"""
-        pass
-
-    def _destroy_router_namespace(self, namespace):
-        """terminate super call to avoid calls to iptables"""
-        pass
-
-    def _spawn_metadata_proxy(self, router_id, ns_name):
-        """terminate super call to avoid calls to iptables"""
-        pass
-
-    def _destroy_metadata_proxy(self, router_id, ns_name):
-        """terminate super call to avoid calls to iptables"""
-        pass
-
-    def _handle_router_snat_rules(self, ri, ex_gw_port,
-                                  interface_name, action):
-        """terminate super call to avoid calls to iptables"""
-        pass
-
-    def _send_gratuitous_arp_packet(self, ns_name, interface_name, ip_address,
-                                    distributed=False):
-        """terminate super call to avoid calls to iptables"""
-        pass
-
-    def _update_routing_table(self, ri, operation, route):
-        """terminate super call to avoid calls to iptables"""
-        pass
-
     def process_router(self, ri):
         pass
 
