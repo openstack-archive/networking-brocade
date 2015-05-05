@@ -78,3 +78,7 @@ class ResourceNotFound(exceptions.NotFound):
 
 class TableCellNotFound(exceptions.NotFound):
     message = _('There is no cell in vRouter status table.')
+
+
+class DvrOrHaRouterNotSupported(exceptions.NeutronException):
+    message = _('DVR or HA routers are not supported.')
