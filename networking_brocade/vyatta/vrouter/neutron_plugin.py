@@ -34,6 +34,7 @@ from neutron.db import l3_dvr_db
 from neutron.db import l3_gwmode_db
 from neutron.db import models_v2
 from neutron.extensions import l3
+from neutron.extensions import portsecurity as psec
 from neutron.i18n import _LE
 from neutron.plugins.common import constants
 
@@ -224,6 +225,7 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
             port = self._core_plugin.update_port(
                 context.elevated(), port['id'], {'port': {
                     'tenant_id': config.VROUTER.tenant_id,
+                    psec.PORTSECURITY: False,
                 }})
             port_created = False
         elif 'subnet_id' in interface_info:
@@ -260,6 +262,7 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
                     'device_id': '',
                     'device_owner': '',
                     'name': '',
+                    psec.PORTSECURITY: False,
                 }
             })
             port_created = True
@@ -491,7 +494,8 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
                 'device_owner': '',
                 'device_id': '',
                 'admin_state_up': True,
-                'name': ''
+                'name': '',
+                psec.PORTSECURITY: False,
             }})
 
         if not gw_port['fixed_ips']:
