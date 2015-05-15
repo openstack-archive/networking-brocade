@@ -222,6 +222,8 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
                                                   subnet['id'],
                                                   subnet['cidr'])
             port_tenant_id = port['tenant_id']
+            self._core_plugin._delete_port_security_group_bindings(
+                context.elevated(), port['id'])
             port = self._core_plugin.update_port(
                 context.elevated(), port['id'], {'port': {
                     'tenant_id': config.VROUTER.tenant_id,
