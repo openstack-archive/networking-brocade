@@ -290,9 +290,10 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
             )
             context.session.add(router_port)
 
+        subnet_id = port['fixed_ips'][0]['subnet_id']
         router_interface_info = self._make_router_interface_info(
             router_id, port['tenant_id'], port['id'],
-            port['fixed_ips'][0]['subnet_id'])
+            subnet_id, [subnet_id])
         self.notify_router_interface_action(
             context, router_interface_info, 'add')
         return router_interface_info
@@ -359,7 +360,8 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
         self._delete_router_port(context, router_id, port)
 
         router_interface_info = self._make_router_interface_info(
-            router_id, subnet['tenant_id'], port['id'], subnet['id'])
+            router_id, subnet['tenant_id'], port['id'],
+            subnet['id'], [subnet['id']])
         self.notify_router_interface_action(
             context, router_interface_info, 'remove')
         return router_interface_info
