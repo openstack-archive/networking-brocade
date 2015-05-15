@@ -20,9 +20,9 @@ import urllib
 from neutron import context
 from neutron.db import models_v2
 from neutron.openstack.common import uuidutils
+from neutron.tests import base as n_base
 
 from networking_brocade.vyatta.common import utils as vyatta_utils
-from networking_brocade.vyatta.tests import base
 from networking_brocade.vyatta.vrouter import client as vyatta_client
 from networking_brocade.vyatta.vrouter import driver as vrouter_driver
 
@@ -40,7 +40,7 @@ def mock_object(target, attribute, new=mock.DEFAULT):
     return patcher.start()
 
 
-class TestVRouterDriver(base.BaseTestCase):
+class TestVRouterDriver(n_base.BaseTestCase):
     def setUp(self):
         super(TestVRouterDriver, self).setUp()
 
@@ -198,7 +198,7 @@ class TestVRouterDriver(base.BaseTestCase):
             routes_to_add, routes_to_del)
 
 
-class TestVRouterDriverApi(base.BaseTestCase):
+class TestVRouterDriverApi(n_base.BaseTestCase):
 
     def setUp(self):
         super(TestVRouterDriverApi, self).setUp()
@@ -322,7 +322,7 @@ class VRouterRestAPIClientMixin(object):
         return client
 
 
-class TestVRouterRestAPIClient(base.BaseTestCase,
+class TestVRouterRestAPIClient(n_base.BaseTestCase,
                                VRouterRestAPIClientMixin):
 
     def setUp(self):
@@ -626,7 +626,7 @@ class TestVRouterRestAPIClient(base.BaseTestCase,
         return response
 
 
-class TestLowLevelRestAPIClient(base.BaseTestCase,
+class TestLowLevelRestAPIClient(n_base.BaseTestCase,
                                 VRouterRestAPIClientMixin):
     def test_get_admin_state(self):
 
