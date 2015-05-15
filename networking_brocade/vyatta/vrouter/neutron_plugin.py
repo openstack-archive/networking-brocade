@@ -448,18 +448,19 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
         ext_ip_change = self._check_for_external_ip_change(
             context, gw_port, ext_ips)
 
-        self._delete_current_gw_port(context, router_id, router, network_id,
-                                     ext_ip_change)
-        self._create_gw_port(context, router_id, router, network_id, ext_ips,
-                             ext_ip_change)
+        if gw_port and ext_ip_change and gw_port['network_id'] == network_id:
+            self._update_current_gw_port(context, router_id, router,
+                                         ext_ips)
+        else:
+            self._delete_current_gw_port(context, router_id, router,
+                                         network_id)
+            self._create_gw_port(context, router_id, router, network_id,
+                                 ext_ips)
 
-    def _delete_current_gw_port(self, context, router_id, router, new_network,
-                                ext_ip_change):
+    def _delete_current_gw_port(self, context, router_id, router, new_network):
         """Delete gw port if attached to an old network or IPs changed."""
         port_requires_deletion = (
-            router.gw_port and
-            (router.gw_port['network_id'] != new_network or ext_ip_change)
-        )
+            router.gw_port and router.gw_port['network_id'] != new_network)
         if not port_requires_deletion:
             return
         admin_ctx = context.elevated()
