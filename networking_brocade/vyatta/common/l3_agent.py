@@ -29,6 +29,24 @@ _KEY_VYATTA_EXTRA_DATA = '_vyatta'
 _KEY_MANAGEMENT_IP_ADDRESS = 'management_ip_address'
 
 
+class RouterInfo(router_info.RouterInfo):
+
+    def add_floating_ip(self, fip, interface_name, device):
+        pass
+
+    def initialize(self, process_monitor):
+        pass
+
+    def process(self, agent):
+        pass
+
+    def delete(self, agent):
+        self.router['gw_port'] = None
+        self.router[l3_constants.INTERFACE_KEY] = []
+        self.router[l3_constants.FLOATINGIP_KEY] = []
+        self.process(agent)
+
+
 class L3AgentMiddleware(l3_agent.L3NATAgentWithStateReport):
     def __init__(self, host, conf=None):
         super(L3AgentMiddleware, self).__init__(host, conf)
@@ -61,24 +79,18 @@ class L3AgentMiddleware(l3_agent.L3NATAgentWithStateReport):
                              'management ip address').format(router_id))
         return self._vyatta_clients_pool.get_by_address(router_id, address)
 
-    def _router_added(self, router_id, router):
-        ri = router_info.RouterInfo(
-            router_id, router, self.conf, self.driver)
-        self.router_info[router_id] = ri
-        self.process_router_add(ri)
+    def _create_router(self, router_id, router):
+        if router.get('distributed') or router.get('ha'):
+            raise v_exc.DvrOrHaRouterNotSupported(router_id=router_id)
 
-    def _router_removed(self, router_id):
-        ri = self.router_info[router_id]
-        if ri:
-            ri.router['gw_port'] = None
-            ri.router[l3_constants.INTERFACE_KEY] = []
-            ri.router[l3_constants.FLOATINGIP_KEY] = []
-            self.process_router(ri)
-
-        del self.router_info[router_id]
-
-    def process_router(self, ri):
-        pass
+        kwargs = {
+            'router_id': router_id,
+            'router': router,
+            'use_ipv6': self.use_ipv6,
+            'agent_conf': self.conf,
+            'interface_driver': self.driver,
+        }
+        return RouterInfo(**kwargs)
 
     def _get_router_info_list_for_tenant(self, router_ids, tenant_id):
         """Returns the list of router info objects on which to apply the fw."""
