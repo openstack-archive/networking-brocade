@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from networking_brocade.vyatta.common import utils
 
 TOKEN_GROUP = 'group'
 TOKEN_PARAM = 'param'
@@ -45,13 +46,13 @@ def config_iter(config):
 
 
 def parse_group(lines):
-    result = {}
+    result = utils.MultiDict()
 
     for line in lines:
         token, key, value = parse_line(line)
 
         if token == TOKEN_PARAM:
-            result[key] = value
+            result.setlistdefault(key).append(value)
         elif token == TOKEN_GROUP:
             result[key] = parse_group(lines)
         else:
