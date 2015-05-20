@@ -152,7 +152,7 @@ class TestVRouterDriver(n_base.BaseTestCase):
         ctx = context.Context('', 'tenant_id1')
         router_id = _uuid()
 
-        self.driver.clear_gateway(ctx, router_id, None)
+        self.driver.clear_gateway(ctx, router_id)
 
         self._router_api.update_router.assert_called_once_with(
             external_gateway_info=None)

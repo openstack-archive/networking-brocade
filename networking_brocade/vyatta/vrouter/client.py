@@ -29,6 +29,7 @@ from networking_brocade.vyatta.common import exceptions as v_exc
 from networking_brocade.vyatta.common import globals as vyatta_globals
 from networking_brocade.vyatta.common import parsers
 from networking_brocade.vyatta.common import utils as vyatta_utils
+from networking_brocade.vyatta.common import vrouter_config
 
 
 LOG = logging.getLogger(__name__)
@@ -152,12 +153,13 @@ class VRouterRestAPIClient(object):
                                   if_ip_address,
                                   self._ROUTER_INTERFACE_DESCR)
 
-        router_if_subnet = self._get_subnet_from_ip_address(if_ip_address)
+        ip_network = netaddr.IPNetwork(if_ip_address)
+        router_if_subnet = str(ip_network.cidr)
 
         # If external gateway was configured before then
         # we need to add SNAT rules
         rule_num = None
-        if self._external_gw_info is not None:
+        if ip_network.version == 4 and self._external_gw_info is not None:
             rule_num = self._add_snat_rule_for_router_if_cmd(
                 cmd_list, router_if_subnet, self._external_gw_info)
 
@@ -197,6 +199,27 @@ class VRouterRestAPIClient(object):
 
         # Remove the router interface info from cache
         self._router_if_subnet_dict.pop(router_if_subnet, None)
+
+    def update_interface(self, interface_info):
+        if_name = self.get_ethernet_if_id(interface_info.mac_address)
+        router_config = self.get_config()
+        if_config = router_config.find_interface(if_name)
+
+        old_addrs = set(netaddr.IPNetwork(ip)
+                        for ip in if_config.getlist('address'))
+        new_addrs = set(interface_info.ip_addresses)
+
+        cmd_list = []
+
+        for ip in old_addrs - new_addrs:
+            self._delete_ethernet_ip_cmd(cmd_list, if_name, str(ip))
+            # TODO(asaprykin): Configure SNAT
+
+        for ip in new_addrs - old_addrs:
+            self._set_ethernet_ip(cmd_list, if_name, str(ip))
+            # TODO(asaprykin): Configure SNAT
+
+        self.exec_cmd_batch(cmd_list)
 
     def assign_floating_ip(self, floating_ip, fixed_ip):
         """Creates SNAT and DNAT rules for given floating ip and fixed ip."""
@@ -401,9 +424,11 @@ class VRouterRestAPIClient(object):
         # Add NAT rules for the existing router interfaces
         nat_rules = {}
         for router_if_subnet in self._router_if_subnet_dict.keys():
-            rule_num = self._add_snat_rule_for_router_if_cmd(cmd_list,
-                                                             router_if_subnet,
-                                                             gw_info)
+            if netaddr.IPNetwork(router_if_subnet).version != 4:
+                continue
+
+            rule_num = self._add_snat_rule_for_router_if_cmd(
+                cmd_list, router_if_subnet, gw_info)
             nat_rules[router_if_subnet] = rule_num
 
         return nat_rules
@@ -681,16 +706,12 @@ class VRouterRestAPIClient(object):
 
         LOG.debug('Vyatta vRouter:get_ethernet_if_id. Given MAC {0}'
                   .format(repr(mac_address)))
-        mac_address = mac_address.strip().lower()
-        ifaces = self._get_interfaces()
-        for iface in ifaces:
-            if iface['mac_address'] == mac_address:
-                return iface['name']
+        iface = self._find_interface(mac_address)
+        return iface['name']
 
-        raise v_exc.VRouterOperationError(
-            ip_address=self.address,
-            reason='Ethernet interface with Mac-address {0} does not exist'
-            .format(mac_address))
+    def get_config(self):
+        raw_config = self._show_cmd('configuration/all')
+        return vrouter_config.RouterConfig.from_string(raw_config)
 
     def _get_interface_cmd(self):
         if self._vrouter_model == self._VROUTER_VR_MODEL:
@@ -1014,6 +1035,18 @@ class VRouterRestAPIClient(object):
     def _get_interfaces(self):
         output = self._show_cmd('interfaces/detail')
         return parsers.parse_interfaces(output)
+
+    def _find_interface(self, mac_address):
+        mac_address = mac_address.strip().lower()
+        ifaces = self._get_interfaces()
+        for iface in ifaces:
+            if iface['mac_address'] == mac_address:
+                return iface
+
+        raise v_exc.VRouterOperationError(
+            ip_address=self.address,
+            reason='Ethernet interface with Mac-address {0} does not exist'
+            .format(mac_address))
 
 
 class ClientsPool(object):

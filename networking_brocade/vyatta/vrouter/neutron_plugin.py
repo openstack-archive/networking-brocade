@@ -191,114 +191,60 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
     def add_router_interface(self, context, router_id, interface_info):
         LOG.debug("Vyatta vRouter Plugin::Add Router Interface. "
                   "router: %s; interface: %s", router_id, interface_info)
+        add_by_port, add_by_sub = self._validate_interface_info(interface_info)
         router = self._get_router(context, router_id)
 
-        self._validate_interface_info(interface_info)
+        new_port = True
 
-        port_tenant_id = None
+        if add_by_port:
+            port, subnets = self._add_interface_by_port(
+                    context, router, interface_info['port_id'], '')
+        elif add_by_sub:
+            port, subnets, new_port = self._add_interface_by_subnet(
+                    context, router, interface_info['subnet_id'], '')
 
-        if 'port_id' in interface_info:
-            # make sure port update is committed
-            with context.session.begin(subtransactions=True):
-                if 'subnet_id' in interface_info:
-                    msg = _("Cannot specify both subnet-id and port-id")
-                    raise q_exc.BadRequest(resource='router', msg=msg)
-
-                port = self._core_plugin._get_port(context.elevated(),
-                                                   interface_info['port_id'])
-                if port['device_id']:
-                    raise q_exc.PortInUse(net_id=port['network_id'],
-                                          port_id=port['id'],
-                                          device_id=port['device_id'])
-                fixed_ips = [ip for ip in port['fixed_ips']]
-                if len(fixed_ips) != 1:
-                    msg = _('Router port must have exactly one fixed IP')
-                    raise q_exc.BadRequest(resource='router', msg=msg)
-                subnet_id = fixed_ips[0]['subnet_id']
-                subnet = self._core_plugin._get_subnet(context.elevated(),
-                                                       subnet_id)
-                self._check_for_dup_router_subnet(context, router,
-                                                  port['network_id'],
-                                                  subnet['id'],
-                                                  subnet['cidr'])
+        if new_port:
             port_tenant_id = port['tenant_id']
             self._core_plugin._delete_port_security_group_bindings(
                 context.elevated(), port['id'])
             port = self._core_plugin.update_port(
                 context.elevated(), port['id'], {'port': {
                     'tenant_id': config.VROUTER.tenant_id,
+                    'device_id': '',
                     psec.PORTSECURITY: False,
                 }})
-            port_created = False
-        elif 'subnet_id' in interface_info:
-            subnet_id = interface_info['subnet_id']
-            subnet = self._core_plugin._get_subnet(context.elevated(),
-                                                   subnet_id)
 
-            # Ensure the subnet has a gateway
-            if not subnet['gateway_ip']:
-                msg = _('Subnet for router interface must have a gateway IP')
-                raise q_exc.BadRequest(resource='router', msg=msg)
-            if (subnet['ip_version'] == 6 and subnet['ipv6_ra_mode'] is None
-                    and subnet['ipv6_address_mode'] is not None):
-                msg = (_('IPv6 subnet %s configured to receive RAs from an '
-                       'external router cannot be added to Neutron Router.') %
-                       subnet['id'])
-                raise q_exc.BadRequest(resource='router', msg=msg)
-            self._check_for_dup_router_subnet(context, router,
-                                              subnet['network_id'],
-                                              subnet_id,
-                                              subnet['cidr'])
+            try:
+                self._attach_port(context, router_id, port)
+            except Exception:
+                with excutils.save_and_reraise_exception():
+                    if add_by_sub:
+                        try:
+                            self._core_plugin.delete_port(context.elevated(),
+                                                          port['id'])
+                        except Exception:
+                            LOG.exception(_LE(
+                                'Failed to delete previously created '
+                                'port for Vyatta vRouter.'))
 
-            fixed_ip = {'ip_address': subnet['gateway_ip'],
-                        'subnet_id': subnet['id']}
+            port = self._core_plugin.update_port(
+                context.elevated(), port['id'], {'port': {
+                    'tenant_id': port_tenant_id,
+                }})
 
-            port_tenant_id = subnet['tenant_id']
-            port = self._core_plugin.create_port(context.elevated(), {
-                'port': {
-                    'tenant_id': config.VROUTER.tenant_id,
-                    'network_id': subnet['network_id'],
-                    'fixed_ips': [fixed_ip],
-                    'mac_address': attributes.ATTR_NOT_SPECIFIED,
-                    'admin_state_up': True,
-                    'device_id': '',
-                    'device_owner': '',
-                    'name': '',
-                    psec.PORTSECURITY: False,
-                }
-            })
-            port_created = True
+            with context.session.begin(subtransactions=True):
+                router_port = l3_db.RouterPort(
+                    port_id=port['id'],
+                    router_id=router.id,
+                    port_type=port['device_owner']
+                )
+                context.session.add(router_port)
+        else:
+            self._update_port(context, router_id, port)
 
-        try:
-            self._attach_port(context, router_id, port)
-        except Exception:
-            with excutils.save_and_reraise_exception():
-                if port_created:
-                    try:
-                        self._core_plugin.delete_port(context.elevated(),
-                                                      port['id'])
-                    except Exception:
-                        LOG.exception(_LE(
-                            'Failed to delete previously created '
-                            'port for Vyatta vRouter.'))
-
-        port = self._core_plugin.update_port(
-            context.elevated(), port['id'], {'port': {
-                'tenant_id': port_tenant_id,
-            }})
-
-        with context.session.begin(subtransactions=True):
-            router_port = l3_db.RouterPort(
-                port_id=port['id'],
-                router_id=router.id,
-                port_type=port['device_owner']
-            )
-            context.session.add(router_port)
-
-        subnet_id = port['fixed_ips'][0]['subnet_id']
         router_interface_info = self._make_router_interface_info(
-            router_id, port['tenant_id'], port['id'],
-            subnet_id, [subnet_id])
+            router_id, port['tenant_id'], port['id'], subnets[-1]['id'],
+            [subnet['id'] for subnet in subnets])
         self.notify_router_interface_action(
             context, router_interface_info, 'add')
         return router_interface_info
@@ -307,69 +253,97 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
         LOG.debug("Vyatta vRouter Plugin::Remove Router Interface. "
                   "router: %s; interface_info: %s", router_id, interface_info)
 
-        if not interface_info:
-            msg = _("Either subnet_id or port_id must be specified")
-            raise q_exc.BadRequest(resource='router', msg=msg)
+        remove_by_port, remove_by_subnet = (
+            self._validate_interface_info(interface_info, for_removal=True)
+        )
+        port_id = interface_info.get('port_id')
+        subnet_id = interface_info.get('subnet_id')
+        router = self._get_router(context, router_id)
+        device_owner = self._get_device_owner(context, router)
 
-        if 'port_id' in interface_info:
-            port_id = interface_info['port_id']
-            port_db = self._core_plugin._get_port(context.elevated(), port_id)
-            if not (port_db['device_owner'] ==
-                    l3_constants.DEVICE_OWNER_ROUTER_INTF and
-                    port_db['device_id'] == router_id):
-                raise l3.RouterInterfaceNotFound(router_id=router_id,
-                                                 port_id=port_id)
-            if 'subnet_id' in interface_info:
-                port_subnet_id = port_db['fixed_ips'][0]['subnet_id']
-                if port_subnet_id != interface_info['subnet_id']:
-                    raise q_exc.SubnetMismatchForPort(
-                        port_id=port_id,
-                        subnet_id=interface_info['subnet_id'])
-            subnet_id = port_db['fixed_ips'][0]['subnet_id']
-            subnet = self._core_plugin._get_subnet(context.elevated(),
-                                                   subnet_id)
-            self._confirm_router_interface_not_in_use(
-                context, router_id, subnet_id)
-            port = port_db
-        elif 'subnet_id' in interface_info:
-            subnet_id = interface_info['subnet_id']
-            self._confirm_router_interface_not_in_use(context, router_id,
-                                                      subnet_id)
-            subnet = self._core_plugin._get_subnet(context.elevated(),
-                                                   subnet_id)
-            found = False
-            try:
-                rport_qry = context.session.query(models_v2.Port)
-                ports = rport_qry.filter_by(
-                    device_id=router_id,
-                    device_owner=l3_constants.DEVICE_OWNER_ROUTER_INTF,
-                    network_id=subnet['network_id'])
+        if remove_by_port:
+            port, subnets, delete_port = self._remove_interface_by_port(
+                    context, router_id, port_id, subnet_id, device_owner)
+        # remove_by_subnet is not used here, because the validation logic of
+        # _validate_interface_info ensures that at least one of remote_by_*
+        # is True.
+        else:
+            port, subnets, delete_port = self._remove_interface_by_subnet(
+                    context, router_id, subnet_id, device_owner)
 
-                for p in ports:
-                    if p['fixed_ips'][0]['subnet_id'] == subnet_id:
-                        port = p
-                        found = True
-                        break
-            except exc.NoResultFound:
-                pass
-
-            if not found:
-                raise l3.RouterInterfaceNotFoundForSubnet(router_id=router_id,
-                                                          subnet_id=subnet_id)
-
-        port = self._core_plugin.update_port(
-            context.elevated(), port['id'], {'port': {
-                'tenant_id': config.VROUTER.tenant_id,
-            }})
-
-        self._delete_router_port(context, router_id, port)
+        port_tenant_id = port['tenant_id']
+        if delete_port:
+            port = self._core_plugin.update_port(
+                context.elevated(), port['id'], {'port': {
+                    'tenant_id': config.VROUTER.tenant_id,
+                }})
+            self._delete_router_port(context, router_id, port)
+        else:
+            self._update_port(context, router_id, port)
 
         router_interface_info = self._make_router_interface_info(
-            router_id, subnet['tenant_id'], port['id'],
-            subnet['id'], [subnet['id']])
+            router_id, port_tenant_id, port['id'], subnets[0]['id'],
+            [subnet['id'] for subnet in subnets])
         self.notify_router_interface_action(
             context, router_interface_info, 'remove')
         return router_interface_info
+
+    def _remove_interface_by_port(self, context, router_id,
+                                  port_id, subnet_id, owner):
+        qry = context.session.query(l3_db.RouterPort)
+        qry = qry.filter_by(
+            port_id=port_id,
+            router_id=router_id,
+            port_type=owner
+        )
+        try:
+            port_db = qry.one().port
+        except exc.NoResultFound:
+            raise l3.RouterInterfaceNotFound(router_id=router_id,
+                                             port_id=port_id)
+        port_subnet_ids = [fixed_ip['subnet_id']
+                           for fixed_ip in port_db['fixed_ips']]
+        if subnet_id and subnet_id not in port_subnet_ids:
+            raise q_exc.SubnetMismatchForPort(
+                port_id=port_id, subnet_id=subnet_id)
+        subnets = [self._core_plugin._get_subnet(context, port_subnet_id)
+                   for port_subnet_id in port_subnet_ids]
+        for port_subnet_id in port_subnet_ids:
+            self._confirm_router_interface_not_in_use(
+                    context, router_id, port_subnet_id)
+        return port_db, subnets, True
+
+    def _remove_interface_by_subnet(self, context,
+                                    router_id, subnet_id, owner):
+        self._confirm_router_interface_not_in_use(
+            context, router_id, subnet_id)
+        subnet = self._core_plugin._get_subnet(context, subnet_id)
+
+        try:
+            rport_qry = context.session.query(models_v2.Port).join(
+                l3_db.RouterPort)
+            ports = rport_qry.filter(
+                l3_db.RouterPort.router_id == router_id,
+                l3_db.RouterPort.port_type == owner,
+                models_v2.Port.network_id == subnet['network_id']
+            )
+
+            for p in ports:
+                port_subnets = [fip['subnet_id'] for fip in p['fixed_ips']]
+                if subnet_id in port_subnets and len(port_subnets) > 1:
+                    # multiple prefix port - delete prefix from port
+                    fixed_ips = [fip for fip in p['fixed_ips'] if
+                            fip['subnet_id'] != subnet_id]
+                    p = self._core_plugin.update_port(context, p['id'],
+                            {'port':
+                                {'fixed_ips': fixed_ips}})
+                    return p, [subnet], False
+                elif subnet_id in port_subnets:
+                    return p, [subnet], True
+        except exc.NoResultFound:
+            pass
+        raise l3.RouterInterfaceNotFoundForSubnet(router_id=router_id,
+                                                  subnet_id=subnet_id)
 
     def _get_interface_infos(self, context, port):
         LOG.debug("Vyatta vRouter Plugin::Get interface infos")
@@ -390,6 +364,21 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
             except q_exc.SubnetNotFound:
                 pass
         return interface_infos
+
+    def _get_interface_infos_new(self, context, port):
+        mac_address = port['mac_address']
+        ip_list = []
+
+        for fixed_ip in port['fixed_ips']:
+            subnet = self._core_plugin._get_subnet(
+                context.elevated(), fixed_ip['subnet_id'])
+            network = netaddr.IPNetwork(subnet.cidr)
+            ip = netaddr.IPNetwork('{0}/{1}'.format(
+                fixed_ip['ip_address'], network.prefixlen))
+            ip_list.append(ip)
+
+        return vyatta_utils.InterfaceInfo(
+            ip_addresses=ip_list, mac_address=mac_address)
 
     def _delete_router_port(self, context, router_id, port, external_gw=False):
         # Get instance, deconfigure interface and detach port from it. To do
@@ -438,6 +427,10 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
                                       {'port': {'device_owner': device_owner,
                                                 'device_id': router_id}})
 
+    def _update_port(self, context, router_id, port):
+        interface_info = self._get_interface_infos_new(context, port)
+        self.driver.update_interface(context, router_id, interface_info)
+
     def _update_router_gw_info(self, context, router_id, info, router=None):
         LOG.debug("Vyatta vRouter Plugin::Update router gateway info")
 
@@ -457,6 +450,17 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
             self._create_gw_port(context, router_id, router, network_id,
                                  ext_ips)
 
+    def _update_current_gw_port(self, context, router_id, router, ext_ips):
+        super(VyattaVRouterMixin, self)._update_current_gw_port(
+            context, router_id, router, ext_ips)
+
+        port = router.gw_port
+
+        self.driver.clear_gateway(context, router_id)
+        self.driver.configure_gateway(
+            context, router_id,
+            self._get_interface_infos(context.elevated(), port))
+
     def _delete_current_gw_port(self, context, router_id, router, new_network):
         """Delete gw port if attached to an old network or IPs changed."""
         port_requires_deletion = (
@@ -470,10 +474,7 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
                 router_id=router_id, net_id=router.gw_port['network_id'])
 
         gw_port = router.gw_port
-        self.driver.clear_gateway(
-            context, router_id,
-            self._get_interface_infos(context.elevated(),
-                                      gw_port))
+        self.driver.clear_gateway(context, router_id)
         with context.session.begin(subtransactions=True):
             router.gw_port = None
             context.session.add(router)
