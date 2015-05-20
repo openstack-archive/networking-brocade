@@ -16,6 +16,7 @@
 import collections
 
 from eventlet import greenthread
+import netaddr
 import six
 
 
@@ -107,3 +108,22 @@ class MultiDict(collections.MutableMapping):
 
     def listvalues(self):
         return six.itervalues(self._items)
+
+
+class InterfaceInfo(object):
+
+    def __init__(self, name=None, ip_addresses=None,
+                 mac_address=None, gateway=None):
+
+        self.name = name
+        self.mac_address = mac_address
+        self.gateway = gateway
+
+        self.ip_addresses = []
+        for addr in ip_addresses:
+            if isinstance(addr, str):
+                addr = netaddr.IPNetwork(addr)
+            elif not isinstance(addr, netaddr.IPNetwork):
+                raise TypeError('IP address {0!r} should be '
+                                'str or netaddr.IPNetwork')
+            self.ip_addresses.append(addr)
