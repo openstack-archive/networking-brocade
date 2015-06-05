@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ast
+import ConfigParser as configparser
 import os
 import sys
 
@@ -20,19 +22,21 @@ if sys.version_info >= (2, 7):
 else:
     import unittest2 as unittest
 
-MLX_TEST_BASE_PATH = './networking_brocade/mlx/tests'
-
 
 def load_tests(loader, tests, pattern):
     suite = unittest.TestSuite()
     base_path = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
     base_path = os.path.split(base_path)[0]
-    test_dirs = {'./networking_brocade/tests',
-                 './networking_brocade/vdx/tests/unit/ml2/drivers/brocade',
-                 MLX_TEST_BASE_PATH + '/unit/ml2/drivers/brocade',
-                 MLX_TEST_BASE_PATH + '/unit/services/l3_router/brocade',
-                 './networking_brocade/vyatta/tests'
-                 }
+    parser = configparser.SafeConfigParser()
+    parser.read("tox.ini")
+    section = 'test_dir_paths'
+    option = 'dir_paths'
+    #if section in parser.sections():
+    try:
+        test_dirs = set(ast.literal_eval(parser.get(section, option)))
+    except (configparser.NoSectionError, configparser.NoOptionError):
+        raise unittest.SkipTest("Error in parsing test_dir_paths section"
+                                " in tox.ini")
     for test_dir in test_dirs:
         if not pattern:
             suite.addTests(loader.discover(test_dir, top_level_dir=base_path))
