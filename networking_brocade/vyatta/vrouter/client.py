@@ -23,6 +23,7 @@ from novaclient import exceptions as nova_exc
 from oslo_serialization import jsonutils
 from oslo_utils import excutils
 import requests
+import six
 
 from networking_brocade.vyatta.common import config
 from networking_brocade.vyatta.common import exceptions as v_exc
@@ -382,7 +383,7 @@ class VRouterRestAPIClient(object):
         self._external_gw_info = given_gw_info
 
         # Cache the nat rules
-        for router_if_subnet, rule_num in nat_rules.iteritems():
+        for router_if_subnet, rule_num in six.iteritems(nat_rules):
             self._router_if_subnet_dict[router_if_subnet] = rule_num
 
     def _clear_gw_configuration(self, cmd_list):
