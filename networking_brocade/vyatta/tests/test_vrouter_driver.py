@@ -602,7 +602,7 @@ class TestVRouterRestAPIClient(n_base.BaseTestCase,
     def test_sync_cache(self):
 
         client = self._create_client()
-
+        client._vrouter_model = client._VROUTER_VSE_MODEL
         with mock.patch.object(
                 vyatta_client.VRouterRestAPIClient, '_show_cmd') as show_cmd:
             show_cmd.return_value = SHOW_CONFIG_OUTPUT

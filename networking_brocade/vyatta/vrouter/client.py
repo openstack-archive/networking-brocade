@@ -15,6 +15,7 @@
 
 import logging
 import re
+import six
 import urllib
 
 import netaddr
@@ -382,7 +383,7 @@ class VRouterRestAPIClient(object):
         self._external_gw_info = given_gw_info
 
         # Cache the nat rules
-        for router_if_subnet, rule_num in nat_rules.iteritems():
+        for router_if_subnet, rule_num in six.iteritems(nat_rules):
             self._router_if_subnet_dict[router_if_subnet] = rule_num
 
     def _clear_gw_configuration(self, cmd_list):
@@ -968,10 +969,16 @@ class VRouterRestAPIClient(object):
 
     def _process_interfaces(self, search_str, system_gw_ip):
 
-        for paragraph in search_str.split('}'):
+        if self._vrouter_model == self._VROUTER_VSE_MODEL:
             ma = re.compile(
                 ".+ethernet (eth\d+).+address ([^ \n]+).+description ([^ \n]+)"
                 ".+", re.DOTALL)
+        else:
+            ma = re.compile(
+                ".+dataplane (dp\d+s\d+).+address ([^ \n]+).+description"
+                " ([^ \n]+).+", re.DOTALL)
+
+        for paragraph in search_str.split('}'):
             result = ma.match(paragraph)
             if result is not None:
                 eth_if_id = result.group(1)
