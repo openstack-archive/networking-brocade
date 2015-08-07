@@ -45,6 +45,10 @@ ML2_BROCADE = [cfg.StrOpt('address', default='',
                           help=('OS type of the device.  NI is NetIron '
                                 'for MLX switches. FI is FastIron for '
                                 'ICX switches.')),
+               cfg.StrOpt('enable_username', default='admin',
+                          help=('Username of the enable config prompt')),
+               cfg.StrOpt('enable_password', default='password', secret=True,
+                          help=('Password of the enable config prompt')),
                ]
 L3_BROCADE = [cfg.StrOpt('address', default='',
                          help=('The IP address of the MLX switch')),
@@ -58,6 +62,10 @@ L3_BROCADE = [cfg.StrOpt('address', default='',
               cfg.StrOpt('ports', default='',
                          help=('Ports to be tagged in the VLAN being '
                                'configured on the switch')),
+              cfg.StrOpt('enable_username', default='admin',
+                         help=('Username of the enable config prompt')),
+              cfg.StrOpt('enable_password', default='password', secret=True,
+                         help=('Password of the enable config prompt')),
               ]
 cfg.CONF.register_opts(SWITCHES, 'ml2_brocade_fi_ni')
 cfg.CONF.register_opts(SWITCHES, 'l3_brocade_mlx')
