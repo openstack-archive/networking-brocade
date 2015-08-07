@@ -18,7 +18,7 @@
     Decides which connector to use - TELNET or SSH, based on
     the argument passed
 """
-import networking_brocade.mlx.ml2.commands as Commands
+from networking_brocade.mlx.ml2 import commands
 from oslo_log import log as logging
 
 LOG = logging.getLogger(__name__)
@@ -36,30 +36,9 @@ class DeviceConnector(object):
         self.host = device_info.get('address')
         self.username = device_info.get('username')
         self.password = device_info.get('password')
+        self.enable_username = device_info.get('enable_username')
+        self.enable_password = device_info.get('enable_password')
         self.transport = device_info.get('transport')
-
-    def enter_configuration_mode(self):
-        """
-        Enter configuration mode. First it enters enable mode
-        and then to configuration mode. There should be no
-        Enable password.
-        """
-
-        self.write(Commands.ENABLE_TERMINAL_CMD)
-        self.write(Commands.CONFIGURE_TERMINAL_CMD)
-
-    def exit_configuration_mode(self):
-        """
-        Exit Configuration mode.
-        """
-        self.send_exit(2)
-
-    def exit_from_device(self):
-        """
-        Exit Configuration mode and device.
-        """
-        self.exit_configuration_mode()
-        self.send_exit(1)
 
     def create_vlan(self, vlanid, ports):
         """
@@ -72,7 +51,7 @@ class DeviceConnector(object):
                   "device %(host)s", {'vlanid': vlanid, 'host': self.host})
         self.enter_configuration_mode()
         self.write(
-            Commands.CONFIGURE_VLAN.format(
+            commands.CONFIGURE_VLAN.format(
                 vlan_id=vlanid))
         LOG.debug(
             "Created VLAN with id %(vlanid)s on device %(host)s", {
@@ -80,8 +59,6 @@ class DeviceConnector(object):
         for port in ports:
             self.tag_port(port)
             LOG.debug("tagged port %(port)s", {'port': port})
-        self.send_exit(1)
-        self.exit_from_device()
         return self.read_response()
 
     def tag_port(self, port):
@@ -92,7 +69,7 @@ class DeviceConnector(object):
         LOG.debug("DeviceConnector:tag_port:Tagging port %(portid)s on device"
                   " %(host)s", {'portid': port, 'host': self.host})
         self.write(
-            Commands.CONFIGURE_ETHERNET.format(
+            commands.CONFIGURE_ETHERNET.format(
                 port_number=port))
 
     def delete_vlan(self, vlan_id):
@@ -106,12 +83,11 @@ class DeviceConnector(object):
                                                      'host': self.host})
         self.enter_configuration_mode()
         self.write(
-            Commands.DELETE_CONFIGURED_VLAN.format(
+            commands.DELETE_CONFIGURED_VLAN.format(
                 vlan_id=vlan_id))
         LOG.debug(
             "Deleted VLAN with id %(vlan_id)s on device %(host)s", {
                 'vlan_id': vlan_id, 'host': self.host})
-        self.exit_from_device()
         return self.read_response()
 
     def get_version(self):
@@ -121,10 +97,9 @@ class DeviceConnector(object):
         """
         LOG.debug("DeviceConnector:get_version:Executing show version for "
                   "device %(host)s", {'host': self.host})
-        self.write(Commands.SHOW_VERSION)
-        self.write(Commands.CTRL_C)
-        self.send_exit(1)
-        return self.read_response(read_lines=False)
+        self.write(commands.SHOW_VERSION)
+        self.write(commands.CTRL_C)
+        return self.read_response()
 
     def create_l3_router(self, vlan_id, gateway_ip_cidr):
         """Configures a Router Interface interface
@@ -144,7 +119,6 @@ class DeviceConnector(object):
         LOG.debug(("DeviceConnector:create_l3_router:Configured router "
                    "interface with id %(vlanid)s on device %(host)s"),
                   {'vlanid': vlan_id, 'host': self.host})
-        self.exit_from_device()
         return self.read_response()
 
     def _create_router_interface(self, vlan_id):
@@ -158,16 +132,15 @@ class DeviceConnector(object):
                   "%(host)s", {'vlanid': vlan_id,
                                'host': self.host})
         self.write(
-            Commands.CONFIGURE_VLAN.format(
+            commands.CONFIGURE_VLAN.format(
                 vlan_id=vlan_id))
         self.write(
-            Commands.CONFIGURE_ROUTER_INTERFACE.format(
+            commands.CONFIGURE_ROUTER_INTERFACE.format(
                 vlan_id=vlan_id))
         LOG.debug("DeviceConnector:_create_router_interface:Created l3 "
                   "router interface %(vlanid)s on device "
                   "%(host)s", {'vlanid': vlan_id,
                                'host': self.host})
-        self.send_exit(1)
 
     def _configure_ipaddress(self, vlan_id, gateway_ip_cidr):
         """Assigns Gateway ip for the configured vlan
@@ -182,17 +155,16 @@ class DeviceConnector(object):
                                 'vlanid': vlan_id,
                                 'host': self.host})
         self.write(
-            Commands.CONFIGURE_INTERFACE.format(
+            commands.CONFIGURE_INTERFACE.format(
                 vlan_id=vlan_id))
         self.write(
-            Commands.CONFIGURE_GATEWAY_IP.format(
+            commands.CONFIGURE_GATEWAY_IP.format(
                 gateway_ip_addr=gateway_ip_cidr))
         LOG.debug("DeviceConnector:_configure_ipaddress:Assigned IP address"
                   " %(ipaddr)s to the router interface %(vlanid)s on device"
                   " %(host)s", {'ipaddr': gateway_ip_cidr,
                                 'vlanid': vlan_id,
                                 'host': self.host})
-        self.send_exit(1)
 
     def delete_l3_router(self, vlan_id):
         """
@@ -209,15 +181,13 @@ class DeviceConnector(object):
                    " %(vlan_id)s from vlan %(vlan_id)s on device %(host)s"),
                   {'vlan_id': vlan_id, 'host': self.host})
         self.write(
-            Commands.CONFIGURE_VLAN.format(vlan_id=vlan_id))
+            commands.CONFIGURE_VLAN.format(vlan_id=vlan_id))
         self.write(
-            Commands.DELETE_ROUTER_INTERFACE.format(
+            commands.DELETE_ROUTER_INTERFACE.format(
                 vlan_id=vlan_id))
-        self.send_exit(1)
 
         LOG.debug(("DeviceConnector:delete_l3_router:Deleted router interface"
                    " %(vlan_id)s from vlan %(vlan_id)s on device %(host)s"),
                   {'vlan_id': vlan_id, 'host': self.host})
 
-        self.exit_from_device()
         return self.read_response()
