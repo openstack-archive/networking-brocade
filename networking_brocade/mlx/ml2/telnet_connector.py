@@ -16,9 +16,9 @@
 """ Implementation of Telnet Connector """
 
 import telnetlib
+import time
 
-from networking_brocade.mlx.ml2.device_connector import (
-    DeviceConnector as DevConn)
+from networking_brocade.mlx.ml2 import device_connector as dev_conn
 from neutron.i18n import _LE
 from oslo_log import log as logging
 
@@ -32,15 +32,23 @@ SUPER_USER_AUTH = '^Password\\:$'
 TERMINAL_LENGTH = "terminal length 0"
 
 END_OF_LINE = "\r"
-TELNET_TERMINAL = ">"
+PROMPT = ">"
+ENABLE_PROMPT = '#'
 CONFIGURE_TERMINAL = "#"
+ENABLE_USERNAME_PROMPT = 'User Name:'
+ENABLE_PASSWORD_PROMPT = 'Password:'
+CONFIG_MODE = "(config)#"
+
+RETURN_COMMAND = "\r"
+ENABLE_COMMAND = "en\r"
+CONFIG_COMMAND = "conf t\r"
 
 MIN_TIMEOUT = 2
 AVG_TIMEOUT = 4
 MAX_TIMEOUT = 8
 
 
-class TelnetConnector(DevConn):
+class TelnetConnector(dev_conn.DeviceConnector):
 
     """
     Uses Telnet to connect to device
@@ -56,12 +64,65 @@ class TelnetConnector(DevConn):
             self.connector.write(self.username + END_OF_LINE)
             self.connector.read_until(LOGIN_PASS_TOKEN, AVG_TIMEOUT)
             self.connector.write(self.password + END_OF_LINE)
-            self.connector.read_until(TELNET_TERMINAL, MAX_TIMEOUT)
+            self.response = str()
+            self._enter_prompt(False)
         except Exception as e:
             LOG.exception(_LE("Connect failed to switch %(host)s with error"
                               " %(error)s"),
                           {'host': self.host, 'error': e.args})
             raise Exception(_("Connection Failed"))
+
+    def _send_command(self, prompt, command):
+        """
+        Executes the command passed, if the response matches the prompt
+        """
+        execution_state = False
+        if self.response.endswith(prompt):
+            self.connector.write(command)
+            execution_state = True
+        return execution_state
+
+    def _enter_prompt(self, is_config_mode):
+        """
+        Enters enable prompt mode or config mode based on the parameter
+
+        param:is_config_mode: if this is True, will enter config mode, else
+                              it will make sure it is in enable prompt.
+        """
+        commands = []
+        prompt_command = {}
+        if is_config_mode:
+            prompts = [ENABLE_PROMPT, CONFIG_MODE]
+            prompt_command = {ENABLE_PROMPT: CONFIG_COMMAND,
+                              CONFIG_MODE: RETURN_COMMAND}
+        else:
+            prompts = [PROMPT, ENABLE_USERNAME_PROMPT,
+                       ENABLE_PASSWORD_PROMPT, ENABLE_PROMPT]
+            prompt_command = {PROMPT: ENABLE_COMMAND,
+                              ENABLE_USERNAME_PROMPT: self.enable_username +
+                              RETURN_COMMAND,
+                              ENABLE_PASSWORD_PROMPT: self.enable_password +
+                              RETURN_COMMAND,
+                              ENABLE_PROMPT: RETURN_COMMAND}
+        cmd_executed = True
+        # Send new line so that channel will have something to read for the
+        # first time.
+        self.connector.write(RETURN_COMMAND)
+        index = 0
+        while index < len(commands):
+            prompt = prompts[index]
+            if cmd_executed:
+                self.response += self.connector.read_until(prompt, AVG_TIMEOUT)
+            command = prompt_command.get(prompt)
+            cmd_executed = self._send_command(prompt, command)
+            index += 1
+            time.sleep(MIN_TIMEOUT)
+
+    def enter_configuration_mode(self):
+        """
+        This method will ensure the session is in configuration mode
+        """
+        self._enter_prompt(True)
 
     def write(self, command):
         """
@@ -70,21 +131,17 @@ class TelnetConnector(DevConn):
         :param:command: Command to be executed on the device
         """
         self.connector.write(command)
+        self.response += self.connector.read_until(PROMPT, MAX_TIMEOUT)
 
-    def read_response(self, read_lines=True):
+    def read_response(self):
         """Read the response from the output stream.
 
-        :param:read_lines: This is used only by the SSH connector.
-        :returns: Response from the device as list.
+        :returns: Response from the device as string.
         """
-        return self.connector.read_until(CONFIGURE_TERMINAL, MIN_TIMEOUT)
+        return self.response
 
     def close_session(self):
         """Close TELNET session."""
         if self.connector:
             self.connector.close()
             self.connector = None
-
-    def send_exit(self, count):
-        """No operation. Used by SSH connector only."""
-        pass
