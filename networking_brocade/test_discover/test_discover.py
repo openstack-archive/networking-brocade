@@ -31,7 +31,6 @@ def load_tests(loader, tests, pattern):
                  './networking_brocade/vdx/tests/unit/ml2/drivers/brocade',
                  MLX_TEST_BASE_PATH + '/unit/ml2/drivers/brocade',
                  MLX_TEST_BASE_PATH + '/unit/services/l3_router/brocade',
-                 './networking_brocade/vyatta/tests'
                  }
     for test_dir in test_dirs:
         if not pattern:
