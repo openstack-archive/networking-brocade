@@ -23,11 +23,12 @@ from neutron.common import constants as l3_constants
 from neutron.i18n import _LE
 from neutron.i18n import _LI
 from neutron.plugins.ml2 import db
-from neutron.plugins.ml2.drivers.brocade.db import models as brocade_db
 from neutron.services.l3_router import l3_router_plugin as router
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import excutils
+
+from networking_brocade.vdx.ml2driver import db_models as brocade_db
 
 
 DEVICE_OWNER_ROUTER_INTF = l3_constants.DEVICE_OWNER_ROUTER_INTF
