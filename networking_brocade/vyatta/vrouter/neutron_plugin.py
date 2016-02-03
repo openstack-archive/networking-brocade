@@ -205,7 +205,6 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
                     context, router, interface_info['subnet_id'], '')
 
         if new_port:
-            port_tenant_id = port['tenant_id']
             self._core_plugin._delete_port_security_group_bindings(
                 context.elevated(), port['id'])
             port = self._core_plugin.update_port(
@@ -230,7 +229,7 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
 
             port = self._core_plugin.update_port(
                 context.elevated(), port['id'], {'port': {
-                    'tenant_id': port_tenant_id,
+                    'tenant_id': port['tenant_id'],
                 }})
 
             with context.session.begin(subtransactions=True):
@@ -244,7 +243,7 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
             self._update_port(context, router_id, port)
 
         router_interface_info = self._make_router_interface_info(
-            router_id, port['tenant_id'], port['id'], subnets[-1]['id'],
+            router_id, port, subnets[-1]['id'],
             [subnet['id'] for subnet in subnets])
         self.notify_router_interface_action(
             context, router_interface_info, 'add')
@@ -272,7 +271,6 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
             port, subnets, delete_port = self._remove_interface_by_subnet(
                     context, router_id, subnet_id, device_owner)
 
-        port_tenant_id = port['tenant_id']
         if delete_port:
             port = self._core_plugin.update_port(
                 context.elevated(), port['id'], {'port': {
@@ -283,7 +281,7 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
             self._update_port(context, router_id, port)
 
         router_interface_info = self._make_router_interface_info(
-            router_id, port_tenant_id, port['id'], subnets[0]['id'],
+            router_id, port, subnets[0]['id'],
             [subnet['id'] for subnet in subnets])
         self.notify_router_interface_action(
             context, router_interface_info, 'remove')
