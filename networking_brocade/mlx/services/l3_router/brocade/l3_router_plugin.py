@@ -17,8 +17,8 @@
 
 """Implementation of Brocade L3RouterPlugin for NI devices."""
 
-from neutron.i18n import _LE
-from neutron.i18n import _LI
+from networking_brocade._i18n import _LE
+from networking_brocade._i18n import _LI
 from neutron.plugins.ml2.driver_context import NetworkContext
 from neutron.services.l3_router import l3_router_plugin as router
 from oslo_log import log as logging
