@@ -83,31 +83,6 @@ class TestBrocadeFiNiMechDriver(base.BaseTestCase):
             super(TestBrocadeFiNiMechDriver, self).setUp()
             self.mechanism_driver = importutils.import_object(_mechanism_name)
 
-    def test_create_network_postcommit_wrong_physnet(self):
-        """
-        Test create network with wrong value for physical network.
-        Physical network to which the devices belong is 'physnet1' but
-        we make a call to create network with physical network 'physnet2'.
-        In this case we raise an exception with error message -
-        "Brocade Mechanism: failed to create network, network cannot be
-        created in the configured physical network."
-        """
-        ctx = self._get_network_context('physnet2', 'vlan')
-        self.assertRaises(ml2_exc.MechanismDriverError,
-                          self.mechanism_driver.create_network_postcommit, ctx)
-
-    def test_create_network_postcommit_wrong_network_type(self):
-        """
-        Test create network with wrong value for network type. The plugin
-        allows to create network only if the request is to create a VLAN
-        network. For any other network type following exception is raised -
-        'Brocade Mechanism failed to create network, only network type vlan
-        is supported"
-        """
-        ctx = self._get_network_context('physnet1', 'vxlan')
-        self.assertRaises(ml2_exc.MechanismDriverError,
-                          self.mechanism_driver.create_network_postcommit, ctx)
-
     @mock.patch.object(brocadefinimechanism.BrocadeFiNiMechanism,
                        '_get_driver')
     def test_create_network_postcommit(self, mock_driver):
