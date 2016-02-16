@@ -16,8 +16,8 @@
 
 """Implementation of Brocade ML2 Mechanism driver for ICX and MLX."""
 
-from neutron.i18n import _LE
-from neutron.i18n import _LI
+from networking_brocade._i18n import _LE
+from networking_brocade._i18n import _LI
 from neutron.plugins.ml2.common import exceptions as ml2_exc
 from neutron.plugins.ml2 import driver_api
 from oslo_log import log as logging
