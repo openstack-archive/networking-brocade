@@ -96,6 +96,7 @@ class BrocadeMechanism(driver_api.MechanismDriver):
             LOG.debug("Virtual Fabric: not enabled")
 
         self.set_features_enabled(osversion, virtual_fabric_enabled)
+        self._driver.close_session()
 
     def set_features_enabled(self, nos_version, virtual_fabric_enabled):
         self._virtual_fabric_enabled = virtual_fabric_enabled
