@@ -19,7 +19,7 @@
 from neutron.i18n import _LE
 from neutron.i18n import _LI
 from neutron.plugins.ml2 import driver_api
-from neutron.plugins.ml2.drivers.brocade.db import models as brocade_db
+from networking_brocade.vdx.ml2driver.nos.db import models as brocade_db
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import importutils
@@ -96,6 +96,7 @@ class BrocadeMechanism(driver_api.MechanismDriver):
             LOG.debug("Virtual Fabric: not enabled")
 
         self.set_features_enabled(osversion, virtual_fabric_enabled)
+        self._driver.close_session()
 
     def set_features_enabled(self, nos_version, virtual_fabric_enabled):
         self._virtual_fabric_enabled = virtual_fabric_enabled
