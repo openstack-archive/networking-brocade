@@ -1,4 +1,4 @@
-# Copyright 2014 Brocade Communications System, Inc.
+# Copyright 2016 Brocade Communications System, Inc.
 # All rights reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -19,13 +19,14 @@
 from neutron.i18n import _LE
 from neutron.i18n import _LI
 from neutron.plugins.ml2 import driver_api
-from neutron.plugins.ml2.drivers.brocade.db import models as brocade_db
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import importutils
 
+from networking_brocade.vdx.ml2driver.nos.db import models as brocade_db
+
 LOG = logging.getLogger(__name__)
-MECHANISM_VERSION = 0.9
+MECHANISM_VERSION = 1.0
 NOS_DRIVER = 'networking_brocade.vdx.ml2driver.nos.nosdriver.NOSdriver'
 
 ML2_BROCADE = [cfg.StrOpt('address', default='',
@@ -96,6 +97,7 @@ class BrocadeMechanism(driver_api.MechanismDriver):
             LOG.debug("Virtual Fabric: not enabled")
 
         self.set_features_enabled(osversion, virtual_fabric_enabled)
+        self._driver.close_session()
 
     def set_features_enabled(self, nos_version, virtual_fabric_enabled):
         self._virtual_fabric_enabled = virtual_fabric_enabled
