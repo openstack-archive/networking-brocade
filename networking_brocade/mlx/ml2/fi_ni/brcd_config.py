@@ -20,6 +20,50 @@ Parses the brocade ethernet configuration template
 
 from oslo_config import cfg
 
+SWITCHES = [
+    cfg.StrOpt(
+        'switch_names',
+        default='',
+        help=('Switches connected to the compute nodes'))]
+
+ML2_BROCADE = [cfg.StrOpt('address', default='',
+                          help=('The IP address of the MLX or ICX switch')),
+               cfg.StrOpt('username', default='admin',
+                          help=('The SSH username of the switch')),
+               cfg.StrOpt('password', default='password', secret=True,
+                          help=('The SSH password of the switch')),
+               cfg.StrOpt('physical_networks', default='',
+                          help=('Allowed physical networks where VLAN can '
+                                'be configured on this switch')),
+               cfg.StrOpt('ports', default='',
+                          help=('Ports to be tagged in the VLAN being '
+                                'configured on the switch')),
+               cfg.StrOpt('transport', default='SSH',
+                          choices=('SSH', 'TELNET'),
+                          help=('Protocol used to communicate with switch')),
+               cfg.StrOpt('ostype', default='NI', choices=('NI', 'FI'),
+                          help=('OS type of the device.  NI is NetIron '
+                                'for MLX switches. FI is FastIron for '
+                                'ICX switches.')),
+               ]
+L3_BROCADE = [cfg.StrOpt('address', default='',
+                         help=('The IP address of the MLX switch')),
+              cfg.StrOpt('username', default='admin',
+                         help=('The SSH username of the switch')),
+              cfg.StrOpt('password', default='password', secret=True,
+                         help=('The SSH password of the switch')),
+              cfg.StrOpt('physical_networks', default='',
+                         help=('Allowed physical networks where VLAN can '
+                               'be configured on this switch')),
+              cfg.StrOpt('ports', default='',
+                         help=('Ports to be tagged in the VLAN being '
+                               'configured on the switch')),
+              ]
+cfg.CONF.register_opts(SWITCHES, 'ml2_brocade_fi_ni')
+cfg.CONF.register_opts(SWITCHES, 'l3_brocade_mlx')
+cfg.CONF.register_opts(ML2_BROCADE, 'ML2_BROCADE_MLX_EXAMPLE')
+cfg.CONF.register_opts(L3_BROCADE, 'L3_BROCADE_MLX_EXAMPLE')
+
 
 class ML2BrocadeConfig(object):
 
@@ -52,6 +96,10 @@ class ML2BrocadeConfig(object):
         for switch in switches:
             switch_info = {}
             switch = switch.strip()
+            if isL2:
+                cfg.CONF.register_opts(ML2_BROCADE, switch)
+            else:
+                cfg.CONF.register_opts(L3_BROCADE, switch)
             for key, value in cfg.CONF._get(switch).items():
                 value = value.strip()
                 switch_info.update({key: value})

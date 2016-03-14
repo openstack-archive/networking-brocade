@@ -16,8 +16,8 @@
 
 """Implementation of Brocade ML2 Mechanism driver for ICX and MLX."""
 
-from neutron.i18n import _LE
-from neutron.i18n import _LI
+from networking_brocade._i18n import _LE
+from networking_brocade._i18n import _LI
 from neutron.plugins.ml2.common import exceptions as ml2_exc
 from neutron.plugins.ml2 import driver_api
 from oslo_log import log as logging
@@ -73,18 +73,16 @@ class BrocadeFiNiMechanism(driver_api.MechanismDriver):
         vlan_id = segments[0]['segmentation_id']
         physical_network = segments[0]['physical_network']
         if physical_network not in self._physical_networks:
-            LOG.exception(_LE("BrocadeFiNiMechanism: Failed to create network."
-                              " Network cannot be created in the configured "
-                              "physical network %(physnet)s"),
-                          {'physnet': physical_network})
-            raise ml2_exc.MechanismDriverError(method='create_network_postcomm'
-                                               'it')
+            LOG.info(_LI("BrocadeFiNiMechanism: Ignoring request to create "
+                         "network. Network cannot be created in the "
+                         "configured physical network %(physnet)s"),
+                     {'physnet': physical_network})
+            return
         if network_type != 'vlan':
-            LOG.exception(_LE("BrocadeFiNiMechanism: Failed to create network "
-                              "for network type %(nw_type)s. Only network type"
-                              " vlan is supported"), {'nw_type': network_type})
-            raise ml2_exc.MechanismDriverError(method='create_network_postcomm'
-                                               'it')
+            LOG.info(_LI("BrocadeFiNiMechanism: Ignoring request to create "
+                         "network for network type %(nw_type)s. Only type "
+                         "vlan is supported"), {'nw_type': network_type})
+            return
         try:
             devices = self._physical_networks.get(physical_network)
             for device in devices:
@@ -142,18 +140,16 @@ class BrocadeFiNiMechanism(driver_api.MechanismDriver):
         network_type = segment['network_type']
         physical_network = segment['physical_network']
         if physical_network not in self._physical_networks:
-            LOG.exception(_LE("BrocadeFiNiMechanism: Failed to delete network."
-                              " Network cannot be deleted in the configured "
-                              "physical network %(physnet)s"),
-                          {'physnet': physical_network})
-            raise ml2_exc.MechanismDriverError(method='delete_network_postcomm'
-                                               'it')
+            LOG.info(_LI("BrocadeFiNiMechanism: Ignoring request to delete "
+                         "network. Network cannot be deleted in the "
+                         "configured physical network %(physnet)s"),
+                     {'physnet': physical_network})
+            return
         if network_type != 'vlan':
-            LOG.exception(_LE("BrocadeFiNiMechanism: Failed to delete network "
-                              "for network type %(nw_type)s. Only network type"
-                              " vlan is supported"), {'nw_type': network_type})
-            raise ml2_exc.MechanismDriverError(method='delete_network_postcomm'
-                                               'it')
+            LOG.info(_LI("BrocadeFiNiMechanism: Ignoring request to delete "
+                         "network for type %(nw_type)s. Only network type "
+                         "vlan is supported"), {'nw_type': network_type})
+            return
         try:
             devices = self._physical_networks.get(physical_network)
             for device in devices:
