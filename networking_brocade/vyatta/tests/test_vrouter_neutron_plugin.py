@@ -22,7 +22,6 @@ from neutron.db import external_net_db
 from neutron.db import models_v2
 from neutron.db import securitygroups_rpc_base as sg_db_rpc
 from neutron.extensions import l3
-from neutron.openstack.common import uuidutils
 from neutron.tests.unit.db import test_db_base_plugin_v2 as test_db_plugin
 from neutron.tests.unit.extensions import test_l3 as test_l3_plugin
 from neutron.tests.unit import testlib_api
@@ -30,6 +29,8 @@ from neutron.tests.unit import testlib_api
 
 from networking_brocade.vyatta.common import utils as vyatta_utils
 from networking_brocade.vyatta.vrouter import neutron_plugin as vrouter_plugin
+
+from oslo_utils import uuidutils
 
 _uuid = uuidutils.generate_uuid
 
@@ -43,6 +44,9 @@ class VRouterTestPlugin(vrouter_plugin.VyattaVRouterMixin,
                         db_base_plugin_v2.NeutronDbPluginV2,
                         external_net_db.External_net_db_mixin,
                         sg_db_rpc.SecurityGroupServerRpcMixin):
+
+    def __init__(self):
+        self.set_ipam_backend()
 
     def delete_port(self, context, port_id, l3_port_check=False):
         super(VRouterTestPlugin, self).delete_port(context, port_id)
@@ -66,6 +70,7 @@ class TestVyattaVRouterPlugin(testlib_api.SqlTestCase):
 
         self.context = context.get_admin_context()
         self.plugin = VRouterTestPlugin()
+        self.plugin.driver = self.driver
 
         session = self.context.session
         with session.begin(subtransactions=True):
@@ -90,8 +95,7 @@ class TestVyattaVRouterPlugin(testlib_api.SqlTestCase):
         network = models_v2.Network(tenant_id='fake-tenant-id',
                                     name='test-network-{0}'.format(n),
                                     status='ACTIVE',
-                                    admin_state_up=True,
-                                    shared=is_shared)
+                                    admin_state_up=True)
         session.add(network)
         session.flush()
         if is_external:
@@ -109,8 +113,7 @@ class TestVyattaVRouterPlugin(testlib_api.SqlTestCase):
                                   ip_version=4,
                                   cidr='{0}.0/24'.format(cidr_prefix),
                                   gateway_ip='{0}.1'.format(cidr_prefix),
-                                  enable_dhcp=True,
-                                  shared=False)
+                                  enable_dhcp=True)
         session.add(subnet)
         session.flush()
         ippool = models_v2.IPAllocationPool(
