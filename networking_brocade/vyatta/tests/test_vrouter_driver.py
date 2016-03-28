@@ -19,13 +19,13 @@ import urllib
 
 from neutron import context
 from neutron.db import models_v2
-from neutron.openstack.common import uuidutils
 from neutron.tests import base as n_base
 
 from networking_brocade.vyatta.common import utils as vyatta_utils
 from networking_brocade.vyatta.vrouter import client as vyatta_client
 from networking_brocade.vyatta.vrouter import driver as vrouter_driver
 
+from oslo_utils import uuidutils
 
 _uuid = uuidutils.generate_uuid
 
@@ -49,7 +49,7 @@ class TestVRouterDriver(n_base.BaseTestCase):
         #     '_management_network').return_value = _uuid()
 
         self._nova_client = mock_patch(
-            'novaclient.v1_1.client.Client').return_value
+            'novaclient.v2.client.Client').return_value
 
         self._server = self._create_server()
         self._nova_client.servers.create.return_value = self._server
@@ -204,7 +204,7 @@ class TestVRouterDriverApi(n_base.BaseTestCase):
         super(TestVRouterDriverApi, self).setUp()
 
         self._nova_client = mock_patch(
-            'novaclient.v1_1.client.Client').return_value
+            'novaclient.v2.client.Client').return_value
 
         # self._mock_object(vrouter_driver.VyattaVRouterDriver,
         #                   '_management_network')
