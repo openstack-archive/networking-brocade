@@ -1,4 +1,4 @@
-# Copyright 2014 Brocade Communications System, Inc.
+# Copyright 2016 Brocade Communications System, Inc.
 # All rights reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -24,7 +24,7 @@ from oslo_utils import excutils
 
 from xml.etree import ElementTree
 
-from networking_brocade.vdx.ml2driver.nos import nctemplates as template
+from networking_brocade.vdx.ampp.ml2driver.nos import nctemplates as template
 from neutron.i18n import _
 from neutron.i18n import _LE
 
@@ -43,6 +43,7 @@ def nos_unknown_host_cb(host, fingerprint):
 
 
 class NOSdriver(object):
+
     """NOS NETCONF interface driver for Neutron network.
 
     Handles life-cycle management of Neutron network (leverages AMPP on NOS)
@@ -344,7 +345,8 @@ class NOSdriver(object):
         """create vrf and associate vrf."""
         router_id = router_id[0:11]
         vrf_name = template.OS_VRF_NAME.format(id=router_id)
-        rd = router_id + ":" + router_id
+        rd = "".join(i for i in router_id if i in "0123456789")
+        rd = rd[:4] + ":" + rd[:4]
         try:
             mgr = self.connect(host, username, password)
             self.create_vrf(mgr, rbridge_id, vrf_name)
