@@ -19,16 +19,16 @@
 from networking_brocade._i18n import _
 from networking_brocade._i18n import _LE
 from networking_brocade._i18n import _LI
+from networking_brocade.vdx.db import models as brocade_db
+from neutron.plugins.common import constants as p_const
 from neutron.plugins.ml2 import driver_api
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import importutils
 
-from networking_brocade.vdx.ml2driver.nos.db import models as brocade_db
-
 LOG = logging.getLogger(__name__)
-MECHANISM_VERSION = 1.0
-NOS_DRIVER = 'networking_brocade.vdx.ml2driver.nos.nosdriver.NOSdriver'
+MECHANISM_VERSION = 0.9
+NOS_DRIVER = 'networking_brocade.vdx.ampp.ml2driver.nos.nosdriver.NOSdriver'
 
 ML2_BROCADE = [cfg.StrOpt('address', default='',
                           help=_('The address of the host to SSH to')),
@@ -48,6 +48,7 @@ cfg.CONF.register_opts(ML2_BROCADE, "ml2_brocade")
 
 
 class BrocadeMechanism(driver_api.MechanismDriver):
+
     """ML2 Mechanism driver for Brocade VDX switches.
 
     This is the upper layer driver class that interfaces to
@@ -65,6 +66,7 @@ class BrocadeMechanism(driver_api.MechanismDriver):
 
         self._physical_networks = cfg.CONF.ml2_brocade.physical_networks
         self.brocade_init()
+        self._driver.close_session()
 
     def brocade_init(self):
         """Brocade specific initialization for this class."""
@@ -98,15 +100,20 @@ class BrocadeMechanism(driver_api.MechanismDriver):
             LOG.debug("Virtual Fabric: not enabled")
 
         self.set_features_enabled(osversion, virtual_fabric_enabled)
-        self._driver.close_session()
+
+    def is_flat_network(self, segment):
+        if not segment or segment.network_type == p_const.TYPE_FLAT:
+            LOG.info(_LI("Flat network nothing to be done"))
+            return True
+        return False
 
     def set_features_enabled(self, nos_version, virtual_fabric_enabled):
         self._virtual_fabric_enabled = virtual_fabric_enabled
         version = nos_version.split(".", 2)
 
         # Starting 4.1.0 port profile domains are supported
-        if int(version[0]) >= 5 or (int(version[0]) >= 4
-                                    and int(version[1]) >= 1):
+        if int(version[0]) >= 5 or (int(version[0]) >= 4 and
+                                    int(version[1]) >= 1):
             self._pp_domains_supported = True
         else:
             self._pp_domains_supported = False
@@ -118,6 +125,8 @@ class BrocadeMechanism(driver_api.MechanismDriver):
 
     def create_network_precommit(self, mech_context):
         """Create Network in the mechanism specific database table."""
+        if self.is_flat_network(mech_context.network_segments[0]):
+            return
 
         network = mech_context.current
         context = mech_context._plugin_context
@@ -138,7 +147,7 @@ class BrocadeMechanism(driver_api.MechanismDriver):
                   "network cannot be created in the configured "
                   "physical network"))
 
-        if network_type != 'vlan':
+        if network_type not in [p_const.TYPE_VLAN]:
             raise Exception(
                 _("Brocade Mechanism: failed to create network, "
                   "only network type vlan is supported"))
@@ -165,6 +174,8 @@ class BrocadeMechanism(driver_api.MechanismDriver):
         """Create Network as a portprofile on the switch."""
 
         LOG.debug("create_network_postcommit: called")
+        if self.is_flat_network(mech_context.network_segments[0]):
+            return
 
         network = mech_context.current
         # use network_id to get the network attributes
@@ -174,7 +185,7 @@ class BrocadeMechanism(driver_api.MechanismDriver):
 
         network_id = network['id']
         network = brocade_db.get_network(context, network_id)
-        network_type = network['network_type']
+        network_type = network.network_type
         tenant_id = network['tenant_id']
         vlan_id = network['vlan']
 
@@ -202,6 +213,8 @@ class BrocadeMechanism(driver_api.MechanismDriver):
         """Delete Network from the plugin specific database table."""
 
         LOG.debug("delete_network_precommit: called")
+        if self.is_flat_network(mech_context.network_segments[0]):
+            return
 
         network = mech_context.current
         network_id = network['id']
@@ -233,6 +246,9 @@ class BrocadeMechanism(driver_api.MechanismDriver):
         """
 
         LOG.debug("delete_network_postcommit: called")
+        if self.is_flat_network(mech_context.network_segments[0]):
+            return
+
         network = mech_context.current
         network_id = network['id']
         vlan_id = network['provider:segmentation_id']
@@ -268,6 +284,8 @@ class BrocadeMechanism(driver_api.MechanismDriver):
         """Create logical port on the switch (db update)."""
 
         LOG.debug("create_port_precommit: called")
+        if self.is_flat_network(mech_context.network.network_segments[0]):
+            return
 
         port = mech_context.current
         port_id = port['id']
@@ -283,7 +301,8 @@ class BrocadeMechanism(driver_api.MechanismDriver):
         try:
             brocade_db.create_port(context, port_id, network_id,
                                    None,
-                                   vlan_id, tenant_id, admin_state_up)
+                                   vlan_id, tenant_id, admin_state_up,
+                                   None)
         except Exception:
             LOG.exception(_LE("Brocade Mechanism: failed to create port"
                               " in db"))
@@ -294,6 +313,8 @@ class BrocadeMechanism(driver_api.MechanismDriver):
         """Associate the assigned MAC address to the portprofile."""
 
         LOG.debug("create_port_postcommit: called")
+        if self.is_flat_network(mech_context.network.network_segments[0]):
+            return
 
         port = mech_context.current
         port_id = port['id']
@@ -303,6 +324,9 @@ class BrocadeMechanism(driver_api.MechanismDriver):
         context = mech_context._plugin_context
 
         network = brocade_db.get_network(context, network_id)
+        if not network:
+            LOG.info(_LI("network not populated nothing to be done"))
+            return
         vlan_id = network['vlan']
 
         interface_mac = port['mac_address']
@@ -332,6 +356,8 @@ class BrocadeMechanism(driver_api.MechanismDriver):
         """Delete logical port on the switch (db update)."""
 
         LOG.debug("delete_port_precommit: called")
+        if self.is_flat_network(mech_context.network.network_segments[0]):
+            return
         port = mech_context.current
         port_id = port['id']
 
@@ -349,6 +375,8 @@ class BrocadeMechanism(driver_api.MechanismDriver):
         """Dissociate MAC address from the portprofile."""
 
         LOG.debug("delete_port_postcommit: called")
+        if self.is_flat_network(mech_context.network.network_segments[0]):
+            return
         port = mech_context.current
         port_id = port['id']
         network_id = port['network_id']
@@ -357,6 +385,9 @@ class BrocadeMechanism(driver_api.MechanismDriver):
         context = mech_context._plugin_context
 
         network = brocade_db.get_network(context, network_id)
+        if not network:
+            LOG.info(_LI("network not populated nothing to be done"))
+            return
         vlan_id = network['vlan']
 
         interface_mac = port['mac_address']
