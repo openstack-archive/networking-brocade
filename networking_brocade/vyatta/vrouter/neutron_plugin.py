@@ -137,8 +137,14 @@ class VyattaVRouterMixin(common_db_mixin.CommonDbMixin,
                     context.session.delete(router_db)
 
         if gw_info != attributes.ATTR_NOT_SPECIFIED:
-            self._update_router_gw_info(context, router_db['id'], gw_info)
-            router_dict[l3.EXTERNAL_GW_INFO] = gw_info
+            try:
+                self._update_router_gw_info(context, router_db['id'], gw_info)
+                router_dict[l3.EXTERNAL_GW_INFO] = gw_info
+            except q_exc.NeutronException:
+                self.delete_router(context, router_id)
+                with excutils.save_and_reraise_exception():
+                    with context.session.begin(subtransactions=True):
+                        context.session.delete(router_db)
 
         return self._make_router_dict(router_db)
 

@@ -25,7 +25,7 @@ from neutron.common import log
 from neutron.db import models_v2
 from neutron.i18n import _LE, _LI
 from novaclient import exceptions as nova_exc
-from novaclient.v1_1 import client as novaclient
+from novaclient.v2 import client as novaclient
 
 from networking_brocade.vyatta.common import config
 from networking_brocade.vyatta.common import exceptions as v_exc
