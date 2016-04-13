@@ -17,8 +17,8 @@
 """
 Returns the driver based on the firmware version of the device
 """
-from neutron.i18n import _LE
-from neutron.i18n import _LI
+from networking_brocade._i18n import _LE
+from networking_brocade._i18n import _LI
 from oslo_log import log as logging
 from oslo_utils import importutils
 

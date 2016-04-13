@@ -17,6 +17,7 @@
 Common driver for both FI and NI devices
 """
 
+from networking_brocade._i18n import _
 from oslo_log import log as logging
 from oslo_utils import importutils
 

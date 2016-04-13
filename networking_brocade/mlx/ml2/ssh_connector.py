@@ -15,8 +15,9 @@
 
 """ Implementation of SSH Connector"""
 
+from networking_brocade._i18n import _
+from networking_brocade._i18n import _LE
 from networking_brocade.mlx.ml2 import device_connector as dev_conn
-from neutron.i18n import _LE
 from oslo_log import log as logging
 
 import paramiko

@@ -15,11 +15,11 @@
 
 
 import mock
+from networking_brocade._i18n import _LE
 from networking_brocade.mlx.services.l3_router.brocade import (
     l3_router_plugin as brocadel3routerplugin)
 from neutron import context
 from neutron.db import l3_db
-from neutron.i18n import _LE
 from neutron.services.l3_router import l3_router_plugin as router
 from neutron.tests import base
 from oslo_utils import importutils
