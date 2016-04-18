@@ -370,9 +370,11 @@ class BrocadeMechanism(api.MechanismDriver):
                 ("dhcp" not in port['device_owner'])):
             # Not a compute port or dhcp , return
             return False
-        #if not self._is_profile_bound_to_port(port, context):
+        if not baremetal_util.is_baremetal_deploy(port):
+            return True
+        if not self._is_profile_bound_to_port(port, context):
             # it is baremetal port
-        #    return False
+            return False
         return True
 
     def _is_profile_bound_to_port(self, port, context):
