@@ -144,7 +144,7 @@ class BrocadeMechanism(api.MechanismDriver):
                 _("Brocade Mechanism: create_network_precommit failed"))
 
     def create_network_postcommit(self, mech_context):
-        """Create Network as a portprofile on the switch."""
+        """Create Network on the switch."""
 
         LOG.debug("create_network_postcommit: called")
 
@@ -199,7 +199,7 @@ class BrocadeMechanism(api.MechanismDriver):
                 _("Brocade Mechanism: delete_network_precommit failed"))
 
     def delete_network_postcommit(self, mech_context):
-        """Delete network which translates to removng portprofile
+        """Delete network
         from the switch.
         """
         LOG.debug("delete_network_postcommit: called")
@@ -241,7 +241,7 @@ class BrocadeMechanism(api.MechanismDriver):
             context, port, mech_context.top_bound_segment)
 
     def create_port_postcommit(self, mech_context):
-        """Associate the assigned MAC address to the portprofile."""
+        """Associate the port to the network."""
         LOG.debug("create_port_postcommit(self: called")
         if self.is_flat_network(mech_context.network.network_segments[0]):
             return
@@ -267,7 +267,7 @@ class BrocadeMechanism(api.MechanismDriver):
         self._delete_brocade_port(context, port)
 
     def delete_port_postcommit(self, mech_context):
-        """Dissociate MAC address from the portprofile."""
+        """Dissociate port from the network."""
         LOG.debug("delete_port_postcommit(self: called")
         if self.is_flat_network(mech_context.network.network_segments[0]):
             return
@@ -370,9 +370,11 @@ class BrocadeMechanism(api.MechanismDriver):
                 ("dhcp" not in port['device_owner'])):
             # Not a compute port or dhcp , return
             return False
-        #if not self._is_profile_bound_to_port(port, context):
+        if not baremetal_util.is_baremetal_deploy(port):
+            return True
+        if not self._is_profile_bound_to_port(port, context):
             # it is baremetal port
-        #    return False
+            return False
         return True
 
     def _is_profile_bound_to_port(self, port, context):
