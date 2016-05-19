@@ -292,12 +292,18 @@ class BrocadeSVIPlugin(router.L3RouterPlugin):
                   "router_id=%(router_id)s "
                   "interface_info=%(interface_info)r",
                   {'router_id': router_id, 'interface_info': interface_info})
+        remove_by_port, remove_by_subnet = (
+            self._validate_interface_info(interface_info, for_removal=True)
+        )
         with context.session.begin(subtransactions=True):
             info = super(BrocadeSVIPlugin, self).remove_router_interface(
                 context, router_id, interface_info)
 
         try:
             subnet = self._core_plugin._get_subnet(context, info['subnet_id'])
+            if self._svi['redundancy'] and remove_by_subnet:
+                self._core_plugin.delete_port(context, info['port_id'],
+                                              l3_port_check=False)
             cidr = subnet['cidr']
             net_addr, net_len = self.net_addr(cidr)
             gateway_ip = subnet['gateway_ip']
