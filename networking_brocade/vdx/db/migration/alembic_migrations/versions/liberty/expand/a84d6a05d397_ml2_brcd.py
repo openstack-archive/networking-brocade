@@ -47,6 +47,16 @@ def upgrade():
                     sa.PrimaryKeyConstraint('id', 'svi_id'),
                     mysql_engine='InnoDB'
                     )
+
+    op.create_table(
+        'ml2_brocadeuplinkports',
+        sa.Column('id', sa.String(length=36), nullable=False),
+        sa.Column('tenant_id', sa.String(length=255), nullable=True),
+        sa.Column('vlan_id', sa.String(length=36), nullable=False),
+        sa.Column('binding_profile', sa.String(length=4095), nullable=False),
+        sa.PrimaryKeyConstraint('id'),
+        mysql_engine='InnoDB')
+
     op.create_index(op.f('ix_ml2_brocadesvis_tenant_id'),
                     'ml2_brocadesvis', ['tenant_id'], unique=False)
     op.add_column('ml2_brocadeports', sa.Column(

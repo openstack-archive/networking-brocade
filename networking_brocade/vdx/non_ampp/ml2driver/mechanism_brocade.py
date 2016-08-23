@@ -51,6 +51,7 @@ class BrocadeMechanism(api.MechanismDriver):
         self._driver = None
         self._physical_networks = None
         self._switch = None
+        self._supported_vnic_types = [portbindings.VNIC_NORMAL]
         self._device_dict = {}
         self._bond_mappings = {}
         self._lacp_ports = {}
@@ -231,11 +232,17 @@ class BrocadeMechanism(api.MechanismDriver):
             return
 
         port = mech_context.current
+
+        vnic_type = port[portbindings.VNIC_TYPE]
+        if vnic_type not in self._supported_vnic_types:
+            LOG.debug("binding profile vnic type %s is not direct", vnic_type)
+            return
         if not self._is_compute_or_dhcp_port(port, mech_context):
             return
         if baremetal_util.is_baremetal_deploy(port):
             LOG.debug("create_port_precommit: baremetal deploy")
             return
+
         context = neutron_context.get_admin_context()
         self._create_brocade_port(
             context, port, mech_context.top_bound_segment)
@@ -247,6 +254,12 @@ class BrocadeMechanism(api.MechanismDriver):
             return
 
         port = mech_context.current
+
+        vnic_type = port[portbindings.VNIC_TYPE]
+        if vnic_type not in self._supported_vnic_types:
+            LOG.debug("binding profile vnic type %s is not direct", vnic_type)
+            return
+
         if not self._is_compute_or_dhcp_port(port, mech_context):
             return
         context = mech_context._plugin_context
@@ -260,6 +273,10 @@ class BrocadeMechanism(api.MechanismDriver):
             return
 
         port = mech_context.current
+        vnic_type = port[portbindings.VNIC_TYPE]
+        if vnic_type not in self._supported_vnic_types:
+            LOG.debug("binding profile vnic type %s is not direct", vnic_type)
+            return
         if not self._is_compute_or_dhcp_port(port, mech_context):
             return
 
@@ -273,6 +290,10 @@ class BrocadeMechanism(api.MechanismDriver):
             return
 
         port = mech_context.current
+        vnic_type = port[portbindings.VNIC_TYPE]
+        if vnic_type not in self._supported_vnic_types:
+            LOG.debug("binding profile vnic type %s is not direct", vnic_type)
+            return
         if not self._is_compute_or_dhcp_port(port, mech_context):
             return
 
@@ -286,6 +307,10 @@ class BrocadeMechanism(api.MechanismDriver):
 
         context = mech_context._plugin_context
         port = mech_context.current
+        vnic_type = port[portbindings.VNIC_TYPE]
+        if vnic_type not in self._supported_vnic_types:
+            LOG.debug("binding profile vnic type %s is not direct", vnic_type)
+            return
         LOG.debug("update_port_precommit(self: called")
         if not self._is_compute_or_dhcp_port(port, mech_context):
             return
@@ -312,6 +337,10 @@ class BrocadeMechanism(api.MechanismDriver):
             return
 
         port = mech_context.current
+        vnic_type = port[portbindings.VNIC_TYPE]
+        if vnic_type not in self._supported_vnic_types:
+            LOG.debug("binding profile vnic type %s is not direct", vnic_type)
+            return
         context = mech_context._plugin_context
         LOG.debug("update_port_postcommit: called")
         if not self._is_compute_or_dhcp_port(port, mech_context):
@@ -426,6 +455,7 @@ class BrocadeMechanism(api.MechanismDriver):
             brocade_db.create_port(context, port_id, network_id,
                                    physical_network, vlan_id, tenant_id,
                                    admin_state_up, hostname)
+
         except Exception:
             LOG.exception(_LE("Brocade Mechanism: "
                               "failed to create port in db"))

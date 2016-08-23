@@ -279,6 +279,13 @@ class NOSdriver(object):
             self.create_vlan_interface(vlan_id)
             self.configure_native_vlan_on_interface(speed, name, vlan_id)
 
+    def prepare_interface_in_l2_more(self, speed, name):
+        confstr_trunk = template.CONFIGURE_INTERFACE_SWITCHPORT_TRUNK.\
+            format(speed=speed, name=name)
+        self.configure_l2_mode_for_interface(speed, name)
+        self.configure_interface_in_trunk_mode(confstr_trunk)
+        self.activate_interface(speed, name)
+
     def configure_interface_in_trunk_mode(self, confstr_trunk):
         self._edit_config('running', confstr_trunk)
 
@@ -824,16 +831,18 @@ class NOSdriver(object):
         self.configure_interface_in_trunk_mode(confstr_trunk)
         self.activate_interface(speed, name)
         try:
-            self._edit_config('running', confstr1)
-        except Exception:
-            LOG.warning(_LW("interface ready to accept untagged traffic"))
-        try:
             self._edit_config('running', confstr2)
         except Exception:
             with excutils.save_and_reraise_exception() as ctxt:
+                self.close_session()
                 LOG.warning(_LW("Error configuring native vlan"
                      " on interface {}"))
                 ctxt.reraise = False
+        try:
+            self._edit_config('running', confstr1)
+        except Exception:
+            self.close_session()
+            LOG.warning(_LW("interface ready to accept untagged traffic"))
 
     def remove_native_vlan_from_interface(self, speed, name):
         """configure native vlan on interface"""
@@ -844,6 +853,16 @@ class NOSdriver(object):
         except Exception:
             with excutils.save_and_reraise_exception() as ctxt:
                 LOG.warning(_LW("Error remove native vlan on interface {}"))
+                ctxt.reraise = False
+
+    def remove_mtu_from_interface(self, speed, name):
+        mtu_remove = template.DELETE_MTU_ON_INTERFACE.format(speed=speed,
+            name=name)
+        try:
+            self._edit_config('running', mtu_remove)
+        except Exception:
+            with excutils.save_and_reraise_exception() as ctxt:
+                LOG.warning(_LW("Error removing mtu from the interface"))
                 ctxt.reraise = False
 
     def configure_mtu_on_interface(self, speed, name, mtu):

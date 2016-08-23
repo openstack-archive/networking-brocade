@@ -149,6 +149,17 @@ CONFIGURE_MTU_ON_INTERFACE = """
     </config>
 """
 
+DELETE_MTU_ON_INTERFACE = """
+    <config>
+        <interface xmlns="urn:brocade.com:mgmt:brocade-interface">
+    <{speed}>
+        <name>{name}</name>
+        <mtu operation="delete"/>
+    </{speed}>
+    </interface>
+    </config>
+"""
+
 CONFIGURE_INTERFACE_SWITCHPORT_V2 = """
     <config>
         <interface xmlns="urn:brocade.com:mgmt:brocade-interface">
@@ -210,14 +221,14 @@ ADD_OR_REMOVE_VLAN_TO_INTERFACE = """
 """
 
 ALLOW_UNTAG_TRAF_ON_INTERFACE = """
-    <config>
+    <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
         <interface xmlns="urn:brocade.com:mgmt:brocade-interface">
     <{speed}>
         <name>{name}</name>
         <switchport>
                 <trunk>
                    <tag>
-                       <native-vlan  operation="delete"/>
+                       <native-vlan  xc:operation="delete"/>
                    </tag>
                 </trunk>
         </switchport>
