@@ -157,8 +157,6 @@ class BrocadeSVIPlugin(router.L3RouterPlugin):
 
     def create_router(self, context, router):
         """creates a vrf on NOS device """
-        LOG.debug("RouterMixin.create_router() called, "
-                  "router=%s .", router)
         r = router['router']
         self._get_tenant_id_for_create(context, r)
         with context.session.begin(subtransactions=True):
@@ -183,6 +181,11 @@ class BrocadeSVIPlugin(router.L3RouterPlugin):
     def update_router(self, context, router_id, router):
         """Update the router with static route"""
         r = router['router']
+        if "routes" not in r:
+            updated_router = super(BrocadeSVIPlugin, self).\
+                update_router(context, router_id, router)
+            return updated_router
+
         old_routes, routes_dict = self._get_extra_routes_dict_by_router_id(
             context, router_id)
         added, removed = neutron_utils.diff_list_of_dict(old_routes,
@@ -190,15 +193,14 @@ class BrocadeSVIPlugin(router.L3RouterPlugin):
         try:
             updated_router = super(BrocadeSVIPlugin, self).\
                 update_router(context, router_id, router)
-            if 'routes' in r:
-                self._invoke_nos_driver_api('update_router',
-                                            router_id,
-                                            None,
-                                            None,
-                                            None,
-                                            None,
-                                            added,
-                                            removed)
+            self._invoke_nos_driver_api('update_router',
+                                        router_id,
+                                        None,
+                                        None,
+                                        None,
+                                        None,
+                                        added,
+                                        removed)
         except Exception as e:
             LOG.error(_LE("Failed to modify route %s"), str(e))
             raise e
@@ -206,8 +208,6 @@ class BrocadeSVIPlugin(router.L3RouterPlugin):
 
     def delete_router(self, context, router_id):
         """delete a vrf on NOS device """
-        LOG.debug("RouterMixin.delete_router() called, "
-                  "router_id=%s .", router_id)
         router = super(BrocadeSVIPlugin, self).get_router(context, router_id)
         router['tenant_id']
         with context.session.begin(subtransactions=True):
