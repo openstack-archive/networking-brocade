@@ -604,12 +604,32 @@ def _is_valid_interface_speed(speed):
         return False
 
 
+def _get_interface_speed_and_name(interface_full_name):
+    """Converts full name to speed and name"""
+    entry = interface_full_name.strip()
+    if ':' in entry:
+        try:
+            speed, name = entry.split(':')
+            speed = _get_long_speed(speed)
+            return speed, name
+        except Exception as e:
+            raise e
+    return interface_full_name, None
+
+
+def _is_valid_nos_interface(speed, interface):
+    """validate interface name to be three tupple"""
+    if not _is_valid_three_tupple(interface):
+        return False
+    if not _is_valid_interface_speed(speed):
+        return False
+    return True
+
+
 def _is_valid_interface(device, switch, nos_driver):
     """validate if given interfaces are valid"""
     for key in device.keys():
         for (speed, interface) in device[key]:
-            if not _is_valid_three_tupple(interface):
-                return False
-            if not _is_valid_interface_speed(speed):
+            if not _is_valid_nos_interface(speed, interface):
                 return False
     return True

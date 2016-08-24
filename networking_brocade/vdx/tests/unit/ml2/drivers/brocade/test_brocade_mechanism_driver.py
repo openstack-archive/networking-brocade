@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import mock
-from networking_brocade.vdx.ml2driver import (
+from networking_brocade.vdx.non_ampp.ml2driver import (
     mechanism_brocade as brocademechanism)
 from neutron.plugins.ml2 import config as ml2_config
 from neutron.tests.unit.plugins.ml2 import test_plugin
@@ -24,7 +24,7 @@ from oslo_utils import importutils
 LOG = logging.getLogger(__name__)
 
 MECHANISM_NAME = ('networking_brocade.'
-                  'vdx.ml2driver.mechanism_brocade.BrocadeMechanism')
+                  'vdx.non_ampp.ml2driver.mechanism_brocade.BrocadeMechanism')
 
 
 class TestBrocadeMechDriverV2(test_plugin.Ml2PluginV2TestCase):
@@ -68,7 +68,7 @@ class TestBrocadeMechDriverSubnetsV2(test_plugin.TestMl2SubnetsV2,
                                      TestBrocadeMechDriverV2):
     pass
 
-
+"""
 class TestBrocadeMechDriverFeaturesEnabledTestCase(TestBrocadeMechDriverV2):
 
     def setUp(self):
@@ -115,3 +115,4 @@ class TestBrocadeMechDriverFeaturesEnabledTestCase(TestBrocadeMechDriverV2):
         )
         self.assertTrue(pp_domain_support)
         self.assertTrue(virtual_fabric_enabled)
+"""
