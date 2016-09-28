@@ -19,10 +19,8 @@ from networking_brocade.mlx.ml2.fi_ni import (
 from neutron import context
 from neutron.plugins.ml2.common import exceptions as ml2_exc
 from neutron.tests import base
-from oslo_log import log as logging
 from oslo_utils import importutils
 
-LOG = logging.getLogger(__name__)
 MECHANISM_NAME = ('networking_brocade.mlx.ml2.fi_ni.'
                   'mechanism_brocade_fi_ni.BrocadeFiNiMechanism')
 FAKE_PHYSICAL_NETWORK = 'physnet1'
