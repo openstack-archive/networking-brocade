@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from networking_brocade.vyatta.common import utils
 
 
@@ -84,7 +82,7 @@ class RouterConfig(object):
         except KeyError:
             return
 
-        for key, params in six.iteritems(ifaces):
+        for key, params in ifaces.items():
             type_, name = key.split()
 
             info = utils.MultiDict(params)

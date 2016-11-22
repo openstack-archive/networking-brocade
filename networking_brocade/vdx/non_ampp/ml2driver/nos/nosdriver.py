@@ -35,7 +35,6 @@ from networking_brocade.vdx.non_ampp.ml2driver.nos import(
 from neutron.common import exceptions
 from oslo_log import log as logging
 from oslo_utils import excutils
-import six
 import sys
 import time
 
@@ -272,10 +271,10 @@ class NOSdriver(object):
                                         " be in proper "
                                         "mode configure switchport mode"))
 
-        for (speed, name), mtu in six.iteritems(mtu):
+        for (speed, name), mtu in mtu.items():
             self.configure_mtu_on_interface(speed, name, mtu)
 
-        for (speed, name), vlan_id in six.iteritems(native_vlans):
+        for (speed, name), vlan_id in native_vlans.items():
             self.create_vlan_interface(vlan_id)
             self.configure_native_vlan_on_interface(speed, name, vlan_id)
 
