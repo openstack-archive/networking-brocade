@@ -48,7 +48,7 @@ class MultiDict(collections.MutableMapping):
             for key, value in mapping.lists():
                 self._items[key] = value[:]
         elif isinstance(mapping, dict):
-            for key, value in six.iteritems(mapping):
+            for key, value in mapping.items():
                 self._items[key] = [value]
         elif mapping is not None:
             for key, value in mapping:
@@ -71,7 +71,7 @@ class MultiDict(collections.MutableMapping):
 
     def __repr__(self):
         items = []
-        for key, lst in six.iteritems(self._items):
+        for key, lst in (self._items).items():
             for item in lst:
                 items.append((key, item))
         return 'MultiDict {0!r}'.format(items)
@@ -104,7 +104,7 @@ class MultiDict(collections.MutableMapping):
         return self.__class__(self)
 
     def lists(self):
-        return six.iteritems(self._items)
+        return (self._items).items()
 
     def listvalues(self):
         return six.itervalues(self._items)

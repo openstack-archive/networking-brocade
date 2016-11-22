@@ -236,7 +236,7 @@ def parse_vpn_connections(ipsec_sa, resources):
                         state))
             conn_status[conn_id].append(state)
 
-    conn_ok = set(key for key, value in six.iteritems(conn_status)
+    conn_ok = set(key for key, value in conn_status.items()
                   if all(value))
 
     return conn_ok

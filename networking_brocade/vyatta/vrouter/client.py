@@ -383,7 +383,7 @@ class VRouterRestAPIClient(object):
         self._external_gw_info = given_gw_info
 
         # Cache the nat rules
-        for router_if_subnet, rule_num in six.iteritems(nat_rules):
+        for router_if_subnet, rule_num in nat_rules.items():
             self._router_if_subnet_dict[router_if_subnet] = rule_num
 
     def _clear_gw_configuration(self, cmd_list):

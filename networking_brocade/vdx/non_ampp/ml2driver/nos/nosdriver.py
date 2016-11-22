@@ -272,10 +272,10 @@ class NOSdriver(object):
                                         " be in proper "
                                         "mode configure switchport mode"))
 
-        for (speed, name), mtu in six.iteritems(mtu):
+        for (speed, name), mtu in mtu.items():
             self.configure_mtu_on_interface(speed, name, mtu)
 
-        for (speed, name), vlan_id in six.iteritems(native_vlans):
+        for (speed, name), vlan_id in native_vlans.items():
             self.create_vlan_interface(vlan_id)
             self.configure_native_vlan_on_interface(speed, name, vlan_id)
 

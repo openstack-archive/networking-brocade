@@ -84,7 +84,7 @@ class RouterConfig(object):
         except KeyError:
             return
 
-        for key, params in six.iteritems(ifaces):
+        for key, params in ifaces.items():
             type_, name = key.split()
 
             info = utils.MultiDict(params)
