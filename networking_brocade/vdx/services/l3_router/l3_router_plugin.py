@@ -123,7 +123,7 @@ class BrocadeSVIPlugin(router.L3RouterPlugin):
             info = super(BrocadeSVIPlugin, self).add_router_interface(
                 context, router_id, interface_info)
 
-            port = db.get_port(context.session, info["port_id"])
+            port = db.get_port(context, info["port_id"])
 
             # shutting down neutron port to allow NOS to do Arp/Routing
             port['admin_state_up'] = False
