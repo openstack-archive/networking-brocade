@@ -36,7 +36,7 @@ from neutron.db import models_v2
 from neutron.extensions import l3
 from neutron.extensions import portsecurity as psec
 from neutron.i18n import _LE
-from neutron.plugins.common import constants
+from neutron_lib import constants
 
 from networking_brocade.vyatta.common import config
 from networking_brocade.vyatta.common import exceptions as v_exc

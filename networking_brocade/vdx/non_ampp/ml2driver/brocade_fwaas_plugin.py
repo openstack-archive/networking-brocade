@@ -26,6 +26,7 @@ from neutron.plugins.common import constants as plugin_constants
 from neutron.plugins.ml2.drivers.brocade.db import models as brocade_db
 import neutron_fwaas
 from neutron_fwaas.extensions import firewall as fw_ext
+from neutron_lib import constants
 from oslo_config import cfg
 from oslo_log import log as logging
 import threading
@@ -66,7 +67,7 @@ class BrocadeFirewallPlugin(plugin.FirewallPlugin):
 
     def _is_l3_agent_running(self, context):
         l3plugin = manager.NeutronManager.get_service_plugins()[
-            plugin_constants.L3_ROUTER_NAT]
+            constants.L3]
         if not l3plugin:
             LOG.error(_LE('No plugin for L3 routing registered! Will reply '
                         'no l3 agents!! '))
@@ -78,7 +79,7 @@ class BrocadeFirewallPlugin(plugin.FirewallPlugin):
     def _get_routers(self, context):
         """get all active routers for tenant"""
         l3plugin = manager.NeutronManager.get_service_plugins()[
-            plugin_constants.L3_ROUTER_NAT]
+            constants.L3]
         if not l3plugin:
             routers = {}
             LOG.error(_LE('No plugin for L3 routing registered! Will reply '

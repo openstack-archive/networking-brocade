@@ -22,6 +22,7 @@ from neutron.common import topics
 from neutron import context as neutron_context
 from neutron import manager
 from neutron.plugins.common import constants as const
+from neutron_lib import constants
 from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
@@ -221,7 +222,7 @@ class FirewallPlugin(
             # old semantics router-ids keyword not specified pick up
             # all routers on tenant.
             l3_plugin = manager.NeutronManager.get_service_plugins().get(
-                const.L3_ROUTER_NAT)
+                constants.L3)
             ctx = neutron_context.get_admin_context()
             routers = l3_plugin.get_routers(ctx)
             router_ids = [
