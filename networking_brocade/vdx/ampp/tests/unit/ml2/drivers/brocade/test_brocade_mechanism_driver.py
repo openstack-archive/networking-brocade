@@ -18,10 +18,7 @@ from networking_brocade.vdx.ml2driver import (
     mechanism_brocade as brocademechanism)
 from neutron.plugins.ml2 import config as ml2_config
 from neutron.tests.unit.plugins.ml2 import test_plugin
-from oslo_log import log as logging
 from oslo_utils import importutils
-
-LOG = logging.getLogger(__name__)
 
 MECHANISM_NAME = ('networking_brocade.'
                   'vdx.ml2driver.mechanism_brocade.BrocadeMechanism')
