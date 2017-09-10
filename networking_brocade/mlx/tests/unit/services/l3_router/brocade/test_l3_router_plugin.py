@@ -127,7 +127,7 @@ class TestBrocadeL3RouterPlugin(base.BaseTestCase, router.L3RouterPlugin):
         mock_core_plugin.side_effect = mock.MagicMock()
         mock_network_info.side_effect = self.side_effect_network_info
         mock_super_remove.returnValue = interface_info
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             Exception, (_LE("BrocadeRouterPlugin")),
             self.driver.add_router_interface,
             ctx, ROUTER, interface_info)
