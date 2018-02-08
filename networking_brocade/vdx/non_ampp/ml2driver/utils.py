@@ -555,7 +555,7 @@ def _get_interface_speed_name(topology, physical_network):
 
 
 def _is_valid_three_tupple(interface):
-    """verify if given interface is threee tupple"""
+    """verify if given interface is three tupple"""
     if '/' in interface:
         s = interface.split('/')
         # Length is checked against three because of rbridge,slot,port
